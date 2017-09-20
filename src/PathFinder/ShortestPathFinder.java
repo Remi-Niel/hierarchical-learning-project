@@ -48,7 +48,7 @@ public class ShortestPathFinder {
 	}
 
 	private void addState(Position s){
-		if(m.getTile(s.x, s.y)!= '#'){
+		if(!m.getTile(s.x, s.y).getSolid()){
 			queue.offer(s);
 		}
 	}
