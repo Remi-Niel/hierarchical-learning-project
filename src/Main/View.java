@@ -4,9 +4,10 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Observable;
 import java.util.Observer;
-
+import java.util.ArrayList;
 import javax.swing.JPanel;
 
+import Assets.Enemy;
 import mapTiles.Tile;
 /**
  * This Class draws the view of the game, it assumes the input map is square.
@@ -76,8 +77,18 @@ public class View extends JPanel implements Observer {
 		}
 		
 		//Paint player
+		int diameter=(int)Math.floor(minDimension/map.size);
+		
 		
 		//Paint Enemies
+		
+		for(Enemy e : model.getEnemyList()){
+			g.setColor(Color.red);
+			int x=(int)Math.floor((e.getX())*minDimension)+horizontalOffset/2;
+			int y=(int)Math.floor((e.getY())*minDimension)+verticalOffset/2;
+			g.fillOval(x, y, (int)Math.floor(diameter*e.diameter), (int)Math.floor(diameter*e.diameter));
+		}
+		
 		
 		//Paint bullets
 		

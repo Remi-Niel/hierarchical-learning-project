@@ -13,4 +13,11 @@ public class Controller extends Observable{
 		this.notifyObservers();
 	}
 	
+	public void update(){
+		m.tickSpawners();
+		setChanged();
+		notifyObservers();
+			
+	}
+	
 }

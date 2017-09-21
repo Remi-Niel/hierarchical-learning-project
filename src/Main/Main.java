@@ -25,6 +25,16 @@ public class Main {
 		
 		Controller c=new Controller(view,model);
 		
+		while(true){
+			try {
+				Thread.sleep(5);
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			c.update();
+		}
+		
 	}
 
 }

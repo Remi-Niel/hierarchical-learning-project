@@ -1,6 +1,7 @@
 package Main;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 import mapTiles.*;
@@ -10,6 +11,7 @@ public class Map {
 	char[][] levelmap;
 	int spawnX,spawnY;
 	public int size;
+	ArrayList<Spawner> spawnerList;
 	
 	public Map(String fileName) throws FileNotFoundException {
 		
@@ -21,6 +23,7 @@ public class Map {
 			levelmap[i]=line.toCharArray();
 		}
 		input.close();
+		spawnerList=new ArrayList<Spawner>();
 		
 		tileMap=new Tile[size][size];
 		for(int x=0;x<size;x++){
@@ -36,7 +39,8 @@ public class Map {
 					tileMap[x][y]=new Key();
 					break;
 				case 'S':
-					tileMap[x][y]=new Spawner();
+					tileMap[x][y]=new Spawner(x,y);
+					spawnerList.add((Spawner) tileMap[x][y]);
 					break;
 				case 'E':
 					tileMap[x][y]=new Exit();
@@ -64,5 +68,9 @@ public class Map {
 	
 	public Tile getTile(int x,int y){
 		return tileMap[x][y];
+	}
+	
+	public ArrayList<Spawner> getSpawners(){
+		return spawnerList;
 	}
 }
