@@ -24,15 +24,20 @@ public class Main {
 		frame.setVisible(true);
 		
 		Controller c=new Controller(view,model);
-		
+		int i=0;
+		Long lastFrame=System.currentTimeMillis();
 		while(true){
+
+			lastFrame=System.currentTimeMillis();
+			System.out.println(++i);
+			c.update();
+
 			try {
-				Thread.sleep(5);
+				Thread.sleep(Math.max(0, 20-(System.currentTimeMillis()-lastFrame)));
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			c.update();
 		}
 		
 	}

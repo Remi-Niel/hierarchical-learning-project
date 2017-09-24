@@ -3,9 +3,9 @@ package mapTiles;
 import java.awt.Color;
 
 public class Spawner extends Tile {
-
-	final int spawnTime=50;
-	final int spawnLimit=10;
+	private int health;
+	final int spawnTime=75;
+	final int spawnLimit=24;
 	int timer;
 	int x,y;
 	int spawnCount;
@@ -16,6 +16,7 @@ public class Spawner extends Tile {
 		this.y=y;
 		timer=spawnTime;
 		spawnCount=0;
+		health=3;
 	}
 	
 	public int getX() {
@@ -37,6 +38,10 @@ public class Spawner extends Tile {
 	
 	public void decrementCount(){
 		spawnCount--;
+	}
+	
+	public boolean damage(){
+		return (--health<=0);
 	}
 	
 	

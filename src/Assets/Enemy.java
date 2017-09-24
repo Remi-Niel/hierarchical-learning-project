@@ -4,7 +4,7 @@ import mapTiles.Spawner;
 
 public class Enemy {
 	
-	public final double diameter =1;
+	public final double diameter =0.95;
 	final int startingHealth=1;
 	Spawner parent;
 	int health;
@@ -12,6 +12,7 @@ public class Enemy {
 	
 	
 	public Enemy(double x, double y, Spawner s) {
+		System.out.println(x +" "+y);
 		this.x=x;
 		this.y=y;
 		health=startingHealth;
@@ -19,7 +20,7 @@ public class Enemy {
 	}
 
 	public boolean hit(){
-		return (--health==0);
+		return (--health<=0);
 	}
 
 	public double getX() {

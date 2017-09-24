@@ -56,12 +56,12 @@ public class ShortestPathFinder {
 	public char findPath(double x1,double y1,double x2,double y2,double diameter){
 		char direction='n';
 		queue= new PriorityQueue<Position>();
-		Position[][] map=new Position[m.size][m.size];
+		Position[][] map=new Position[m.getSize()][m.getSize()];
 		
-		int startX=(int)(x1*m.size);
-		int startY=(int)(y1*m.size);
-		int goalX=(int)(x2*m.size);
-		int goalY=(int)(y2*m.size);
+		int startX=(int)(x1*m.getSize());
+		int startY=(int)(y1*m.getSize());
+		int goalX=(int)(x2*m.getSize());
+		int goalY=(int)(y2*m.getSize());
 		
 		//System.out.println(startX +" "+startY +" " + goalX +" "+goalY);
 		
@@ -83,15 +83,15 @@ public class ShortestPathFinder {
 			}
 		}
 		
-		for(int i=0;i<m.size;i++){
-			for(int j=0;j<m.size;j++){
-				map[i][j]=new Position(i,j,'n',1000*m.size,this.heuristic(i, j, goalX, goalY));
+		for(int i=0;i<m.getSize();i++){
+			for(int j=0;j<m.getSize();j++){
+				map[i][j]=new Position(i,j,'n',1000*m.getSize(),this.heuristic(i, j, goalX, goalY));
 			}
 		}
 		if(startY>0)map[startX][startY-1].set('u', 1);
-		if(startX<m.size-1)map[startX+1][startY].set('r', 1);
+		if(startX<m.getSize()-1)map[startX+1][startY].set('r', 1);
 		if(startX>0)map[startX-1][startY].set('l', 1);
-		if(startY<m.size-1)map[startX][startY+1].set('d', 1);
+		if(startY<m.getSize()-1)map[startX][startY+1].set('d', 1);
 		
 		Position s;
 		while(queue.size()>0){
@@ -103,13 +103,13 @@ public class ShortestPathFinder {
 				direction=s.direction;
 				continue;
 			}
-			if(s.x<m.size){
+			if(s.x<m.getSize()){
 				map[s.x+1][s.y].set(s.direction, s.travelled+1);
 			}
 			if(s.x > 0){
 				map[s.x-1][s.y].set(s.direction, s.travelled+1);
 			}
-			if(s.y<m.size){
+			if(s.y<m.getSize()){
 				map[s.x][s.y+1].set(s.direction, s.travelled+1);
 			}
 			if(s.y>0){
@@ -120,11 +120,11 @@ public class ShortestPathFinder {
 		
 		//System.out.print(direction);
 		if(direction == 'd' || direction == 'u'){
-			if(startX != (int)((x1+diameter)*m.size)){
+			if(startX != (int)((x1+diameter)*m.getSize())){
 				direction = 'l';
 			}
 		}else{
-			if(startY != (int)((y1+diameter)*m.size)){
+			if(startY != (int)((y1+diameter)*m.getSize())){
 				direction = 'u';
 			}
 		}
@@ -136,12 +136,12 @@ public class ShortestPathFinder {
 	public int findDistance(double x1,double y1,double x2,double y2,double diameter){
 		int distance=Integer.MAX_VALUE;
 		queue= new PriorityQueue<Position>();
-		Position[][] map=new Position[m.size][m.size];
+		Position[][] map=new Position[m.getSize()][m.getSize()];
 		
-		int startX=(int)(x1*m.size);
-		int startY=(int)(y1*m.size);
-		int goalX=(int)(x2*m.size);
-		int goalY=(int)(y2*m.size);
+		int startX=(int)(x1*m.getSize());
+		int startY=(int)(y1*m.getSize());
+		int goalX=(int)(x2*m.getSize());
+		int goalY=(int)(y2*m.getSize());
 		
 		//System.out.println(startX +" "+startY +" " + goalX +" "+goalY);
 		
@@ -163,15 +163,15 @@ public class ShortestPathFinder {
 			}
 		}
 		
-		for(int i=0;i<m.size;i++){
-			for(int j=0;j<m.size;j++){
-				map[i][j]=new Position(i,j,'n',1000*m.size,this.heuristic(i, j, goalX, goalY));
+		for(int i=0;i<m.getSize();i++){
+			for(int j=0;j<m.getSize();j++){
+				map[i][j]=new Position(i,j,'n',1000*m.getSize(),this.heuristic(i, j, goalX, goalY));
 			}
 		}
 		if(startY>0)map[startX][startY-1].set('u', 1);
-		if(startX<m.size-1)map[startX+1][startY].set('r', 1);
+		if(startX<m.getSize()-1)map[startX+1][startY].set('r', 1);
 		if(startX>0)map[startX-1][startY].set('l', 1);
-		if(startY<m.size-1)map[startX][startY+1].set('d', 1);
+		if(startY<m.getSize()-1)map[startX][startY+1].set('d', 1);
 		
 		Position s;
 		while(queue.size()>0){
@@ -183,13 +183,13 @@ public class ShortestPathFinder {
 				distance=s.total;
 				continue;
 			}
-			if(s.x<m.size){
+			if(s.x<m.getSize()){
 				map[s.x+1][s.y].set(s.direction, s.travelled+1);
 			}
 			if(s.x > 0){
 				map[s.x-1][s.y].set(s.direction, s.travelled+1);
 			}
-			if(s.y<m.size){
+			if(s.y<m.getSize()){
 				map[s.x][s.y+1].set(s.direction, s.travelled+1);
 			}
 			if(s.y>0){
