@@ -162,11 +162,13 @@ public class Model {
 				player.addKey();
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
+
 			
 			if(t[i] instanceof Health){
 				player.damage(-((Health)t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
+
 		}
 
 		return false;
