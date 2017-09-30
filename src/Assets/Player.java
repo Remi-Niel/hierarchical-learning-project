@@ -2,7 +2,8 @@ package Assets;
 
 public class Player {
 	
-	private final int reloadTime=4;
+	public final double speed=0.1;
+	private final int reloadTime=8;
 	private long lastFire=reloadTime;
 	private int health;
 	private double x,y;
@@ -10,7 +11,7 @@ public class Player {
 	
 	
 	public Player(double x, double y) {
-		health = 10;
+		health = 100;
 		this.x=x;
 		this.y=y;
 		heading=0;
@@ -44,8 +45,15 @@ public class Player {
 		return health;
 	}
 	
-	public boolean damage(){
-		return (--health<=0);
+	public boolean damage(int damage){
+		health-=damage;
+		System.out.println("health: "+health);
+		return (health<=0);
+	}
+	
+	public void move(double x,double y){
+		this.x=x;
+		this.y=y;
 	}
 	
 	public boolean shoot(){

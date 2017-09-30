@@ -14,13 +14,13 @@ public class Controller extends Observable{
 	}
 	
 	public void update(){
-		System.out.println("update spawners");
+		//System.out.println("update spawners");
 		m.tickSpawners();
-		System.out.println("update player");
+		//System.out.println("update player");
 		m.updatePlayer();
-		System.out.println("update bullets");
+		//System.out.println("update bullets");
 		m.updateBullets();
-		System.out.println("Notify observers");
+		//System.out.println("Notify observers");
 		setChanged();
 		notifyObservers();
 			

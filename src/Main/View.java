@@ -86,9 +86,9 @@ public class View extends JPanel implements Observer {
 
 		// Paint player
 		int diameter = (int) Math.floor(minDimension / map.getSize());
-		
+
 		Player p = model.getPlayer();
-		
+
 		int x = (int) Math.floor((p.getX()) * minDimension) + horizontalOffset / 2;
 		int y = (int) Math.floor((p.getY()) * minDimension) + verticalOffset / 2;
 		double headingL = p.getHeading();
@@ -97,36 +97,37 @@ public class View extends JPanel implements Observer {
 		double cornerR = headingL + Math.PI / 4;
 		double radius = (int) Math.floor(minDimension / (map.getSize() * 2));
 
-		g.setColor(Color.blue);
-		g.fillPolygon(
-				new int[] { (int) (x - Math.cos(cornerL) * radius), (int) (x - Math.cos(cornerR) * radius),
-						(int) (x - Math.cos(headingH) * radius) },
-				new int[] { (int) (y + Math.sin(cornerL) * radius), y + (int) (Math.sin(cornerR) * radius),
-						y + (int) (Math.sin(headingH) * radius) },
-				3);
-		g.setColor(Color.BLACK);
-		g.drawPolygon(
-				new int[] { (int) (x - Math.cos(cornerL) * radius), (int) (x - Math.cos(cornerR) * radius),
-						(int) (x - Math.cos(headingH) * radius) },
-				new int[] { (int) (y + Math.sin(cornerL) * radius), y + (int) (Math.sin(cornerR) * radius),
-						y + (int) (Math.sin(headingH) * radius) },
-				3);
+		if (p.getHealth() > 0) {
+			g.setColor(Color.blue);
+			g.fillPolygon(
+					new int[] { (int) (x - Math.cos(cornerL) * radius), (int) (x - Math.cos(cornerR) * radius),
+							(int) (x - Math.cos(headingH) * radius) },
+					new int[] { (int) (y + Math.sin(cornerL) * radius), y + (int) (Math.sin(cornerR) * radius),
+							y + (int) (Math.sin(headingH) * radius) },
+					3);
+			g.setColor(Color.BLACK);
 
+			g.drawPolygon(
+					new int[] { (int) (x - Math.cos(cornerL) * radius), (int) (x - Math.cos(cornerR) * radius),
+							(int) (x - Math.cos(headingH) * radius) },
+					new int[] { (int) (y + Math.sin(cornerL) * radius), y + (int) (Math.sin(cornerR) * radius),
+							y + (int) (Math.sin(headingH) * radius) },
+					3);
+		}
 		// Paint Enemies
-		
-		
+
 		for (Enemy e : model.getEnemyList()) {
 			g.setColor(Color.red);
-			x = (int) Math.floor((e.getX()) * minDimension) + (horizontalOffset-diameter) / 2;
-			y = (int) Math.floor((e.getY()) * minDimension) + (verticalOffset-diameter) / 2;
-			
+			x = (int) Math.floor((e.getX()) * minDimension) + (horizontalOffset - diameter) / 2;
+			y = (int) Math.floor((e.getY()) * minDimension) + (verticalOffset - diameter) / 2;
+
 			g.fillOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
 			g.setColor(Color.BLACK);
 			g.drawOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
 		}
 
 		// Paint bullets
-		
+
 		for (Bullet b : model.getBullets()) {
 			diameter = Math.max((int) Math.floor(minDimension / map.getSize() / 8), 1);
 			x = (int) Math.floor((b.getX()) * minDimension) + horizontalOffset / 2;
@@ -134,7 +135,6 @@ public class View extends JPanel implements Observer {
 			g.fillOval(x, y, diameter, diameter);
 			g.setColor(Color.BLACK);
 		}
-
 
 	}
 

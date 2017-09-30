@@ -54,10 +54,10 @@ public class Map {
 				}
 			}
 		}
-		long t=System.currentTimeMillis();
-		this.floodFillReachable(spawnX, spawnY);
-		System.out.println(System.currentTimeMillis()-t+" ms");
-		System.out.println(spawnX + " " + spawnY);
+//		long t=System.currentTimeMillis();
+//		this.floodFillReachable(spawnX, spawnY);
+		//System.out.println(System.currentTimeMillis()-t+" ms");
+		//System.out.println(spawnX + " " + spawnY);
 	}
 
 	public void printMap() {

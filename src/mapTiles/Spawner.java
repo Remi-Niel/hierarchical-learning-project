@@ -16,7 +16,7 @@ public class Spawner extends Tile {
 		this.y=y;
 		timer=spawnTime;
 		spawnCount=0;
-		health=3;
+		health=20;
 	}
 	
 	public int getX() {
@@ -31,13 +31,16 @@ public class Spawner extends Tile {
 		//System.out.println(spawnCount);
 		if(--timer<=0 ){
 			timer=spawnTime;
-			return spawnCount++ < spawnLimit;
+			if(spawnCount<spawnLimit)
+				spawnCount++;
+				return true;
 		}
 		return false;
 	}
 	
 	public void decrementCount(){
 		spawnCount--;
+		System.out.println("Count: "+spawnCount);
 	}
 	
 	public boolean damage(){

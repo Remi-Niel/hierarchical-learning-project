@@ -16,6 +16,7 @@ public class Model {
 	Player player;
 	double mapSize;
 	CopyOnWriteArrayList<Bullet> bullets;
+	boolean gameOver=false;
 
 	public Model(String fileName) {
 		try {
@@ -114,6 +115,40 @@ public class Model {
 
 	public void updatePlayer(){
 		player.tick();
+		movePlayer();
+	}
+	
+	public boolean collides(double x, double y){
+		
+		Tile t = levelMap.getTile((int) (x * mapSize+0.5), (int) (y * mapSize-0.5));
+		Tile t2= levelMap.getTile((int) (x * mapSize-0.5), (int) (y * mapSize+0.5));
+		
+		for (Enemy e : enemyList) {
+			if (distance(e.getX(), x, e.getY(), y) < e.diameter / mapSize) {
+				gameOver=player.damage(e.getHealth());
+				e.getParent().decrementCount();
+				enemyList.remove(e);
+			}
+		}
+		
+		
+		
+		return t.getSolid()||t2.getSolid();
+	}
+	
+	public void movePlayer(){
+		double x=player.getX();
+		double y=player.getY();
+		double distance=player.speed/mapSize;
+		double dx= Math.cos(player.getHeading())*distance;
+		double dy= -Math.sin(player.getHeading())*distance;
+		x+=dx;
+		y+=dy;
+		
+		if(!collides(x,y)){
+			player.move(x, y);
+		}
+		
 	}
 	
 	public void updateBullets() {
@@ -125,7 +160,7 @@ public class Model {
 					if (e.hit()) {
 						enemyList.remove(e);
 					}
-					;
+					
 
 					bullets.remove(b);
 					continue;
@@ -148,7 +183,7 @@ public class Model {
 		if (player.shoot()) {
 			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), player.getHeading());
 			bullets.add(b);
-			player.setHeading(player.getHeading() + Math.PI / 64);
+			player.setHeading(player.getHeading() + Math.PI / 48);
 		}
 	}
 

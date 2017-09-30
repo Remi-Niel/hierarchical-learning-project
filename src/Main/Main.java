@@ -29,7 +29,7 @@ public class Main {
 		while(true){
 
 			lastFrame=System.currentTimeMillis();
-			System.out.println(++i);
+			//System.out.println(++i);
 			c.update();
 
 			try {
