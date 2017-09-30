@@ -8,13 +8,14 @@ public class Player {
 	private int health;
 	private double x,y;
 	private double heading; //radians
-	
+	private int keys;
 	
 	public Player(double x, double y) {
 		health = 100;
 		this.x=x;
 		this.y=y;
-		heading=0;
+		heading=1.5*Math.PI;
+		keys=0;
 	}
 
 	public double getX() {
@@ -65,6 +66,17 @@ public class Player {
 	}
 	public void tick(){
 		lastFire++;
+	}
+	public boolean useKey(){
+		if(keys>0){
+			keys--;
+			return true;
+		}
+		return false;
+	}
+	
+	public void addKey(){
+		keys++;
 	}
 
 }

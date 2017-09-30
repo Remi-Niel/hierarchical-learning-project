@@ -31,26 +31,29 @@ public class Map {
 			for (int y = 0; y < getSize(); y++) {
 				switch (levelmap[y][x]) {
 				case '#':
-					tileMap[x][y] = new Wall();
+					tileMap[x][y] = new Wall(x,y);
 					break;
 				case 'D':
-					tileMap[x][y] = new Door();
+					tileMap[x][y] = new Door(x,y);
 					break;
 				case 'K':
-					tileMap[x][y] = new Key();
+					tileMap[x][y] = new Key(x,y);
 					break;
 				case 'S':
 					tileMap[x][y] = new Spawner(x, y);
 					spawnerList.add((Spawner) tileMap[x][y]);
 					break;
 				case 'E':
-					tileMap[x][y] = new Exit();
+					tileMap[x][y] = new Exit(x,y);
+					break;
+				case 'H':
+					tileMap[x][y] = new Health(x,y);
 					break;
 				case 'P':
 					spawnX = x;
 					spawnY = y;
 				default:
-					tileMap[x][y] = new Floor();
+					tileMap[x][y] = new Floor(x,y);
 				}
 			}
 		}
@@ -78,7 +81,7 @@ public class Map {
 		if(tileMap[x][y]instanceof Spawner){
 			spawnerList.remove(tileMap[x][y]);
 		}
-		tileMap[x][y]= new Floor();
+		tileMap[x][y]= new Floor(x,y);
 		tileMap[x][y].setReachable(true);
 	}
 

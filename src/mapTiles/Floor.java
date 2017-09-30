@@ -4,7 +4,7 @@ import java.awt.Color;
 
 public class Floor extends Tile {
 
-	public Floor(){
-		super(Color.WHITE,false);
+	public Floor(int x, int y){
+		super(Color.WHITE,false,x,y);
 	}
 }

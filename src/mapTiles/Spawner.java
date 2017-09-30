@@ -7,11 +7,10 @@ public class Spawner extends Tile {
 	final int spawnTime=75;
 	final int spawnLimit=24;
 	int timer;
-	int x,y;
 	int spawnCount;
 	
 	public Spawner(int x, int y) {
-		super(Color.MAGENTA, true);
+		super(Color.MAGENTA, true,x,y);
 		this.x=x;
 		this.y=y;
 		timer=spawnTime;

@@ -4,8 +4,8 @@ import java.awt.Color;
 
 public class Key extends Tile {
 	
-	public Key() {
-		super(Color.YELLOW, false);
+	public Key(int x, int y) {
+		super(Color.YELLOW, false,x,y);
 	}
 
 }
