@@ -6,6 +6,7 @@ import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import Assets.*;
+import PathFinder.*;
 import mapTiles.*;
 
 public class Model {
@@ -17,14 +18,17 @@ public class Model {
 	double mapSize;
 	CopyOnWriteArrayList<Bullet> bullets;
 	boolean gameOver = false;
+	ShortestPathFinder p;
 
 	public Model(String fileName) {
+		enemyList = new CopyOnWriteArrayList<Enemy>();
 		try {
-			levelMap = new Map(fileName);
+			levelMap = new Map(fileName, enemyList);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		enemyList = new CopyOnWriteArrayList<Enemy>();
+		System.out.println(enemyList.size());
+		p = new ShortestPathFinder(levelMap);
 		bullets = new CopyOnWriteArrayList<Bullet>();
 		mapSize = (double) levelMap.getSize();
 		player = new Player((levelMap.getSpawnX() + 0.5) / mapSize, (levelMap.getSpawnY() + 0.5) / mapSize);
@@ -109,7 +113,7 @@ public class Model {
 						break;
 				}
 				if (legal)
-					enemyList.add(new Enemy((dX) / mapSize, (dY) / mapSize, s));
+					enemyList.add(new Ghost((dX) / mapSize, (dY) / mapSize, s));
 			}
 		}
 	}
@@ -117,6 +121,47 @@ public class Model {
 	public void updatePlayer() {
 		player.tick();
 		movePlayer();
+	}
+
+	public void moveEnemies() {
+		for (Enemy e : enemyList) {
+			if (!levelMap.getTile((int) (e.getX() * levelMap.getSize()), (int) (e.getY() * levelMap.getSize()))
+					.reachable())
+				continue;
+			ResultTuple r = p.findPath(e.getX(), e.getY(), player.getX(), player.getY(), e.diameter);
+			if (r.distance > 15)
+				continue;
+			double heading;
+			if (r.distance > 0) {
+				heading = Math.PI / 2 - r.direction * Math.PI / 4;
+				if (heading < 0) {
+					heading += 2 * Math.PI;
+				}
+			} else {
+				heading = -Math.atan2(player.getY() - e.getY(), player.getX() - e.getX());
+				if (heading < 0) {
+					heading += 2 * Math.PI;
+				}
+				int d = (int) Math.round(heading * 4 / (Math.PI));
+				heading = d * Math.PI / 4;
+			}
+
+			double distance = e.getSpeed() / mapSize;
+			double dx = Math.cos(heading) * distance;
+			double dy = -Math.sin(heading) * distance;
+
+			e.move(e.getX() + dx, e.getY() + dy);
+
+			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter / mapSize) {
+				gameOver = player.damage(e.getHealth());
+				if (e instanceof Ghost) {
+					((Ghost) e).getParent().decrementCount();
+				}
+				enemyList.remove(e);
+
+			}
+
+		}
 	}
 
 	public boolean collides(double x, double y) {
@@ -128,44 +173,35 @@ public class Model {
 		t[2] = levelMap.getTile((int) (x * mapSize - 0.5), (int) (y * mapSize - 0.5));
 		t[3] = levelMap.getTile((int) (x * mapSize - 0.5), (int) (y * mapSize + 0.5));
 
-		for (Enemy e : enemyList) {
-			if (distance(e.getX(), x, e.getY(), y) < e.diameter / mapSize) {
-				gameOver = player.damage(e.getHealth());
-				e.getParent().decrementCount();
-				enemyList.remove(e);
-			}
-		}
-
 		for (int i = 0; i < 4; i++) {
-			if (t[i].getSolid()){
-				if(t[i] instanceof Door && player.useKey()){
-					((Door)t[i]).open();
-					if(levelMap.getTile(t[i].getX()+1, t[i].getY()) instanceof Door){
-						((Door)levelMap.getTile(t[i].getX()+1, t[i].getY())).open();
+			if (t[i].getSolid()) {
+				if (t[i] instanceof Door && player.useKey()) {
+					((Door) t[i]).open();
+					if (levelMap.getTile(t[i].getX() + 1, t[i].getY()) instanceof Door) {
+						((Door) levelMap.getTile(t[i].getX() + 1, t[i].getY())).open();
 					}
-					if(levelMap.getTile(t[i].getX()-1, t[i].getY()) instanceof Door){
-						((Door)levelMap.getTile(t[i].getX()-1, t[i].getY())).open();
+					if (levelMap.getTile(t[i].getX() - 1, t[i].getY()) instanceof Door) {
+						((Door) levelMap.getTile(t[i].getX() - 1, t[i].getY())).open();
 					}
-					if(levelMap.getTile(t[i].getX(), t[i].getY()-1) instanceof Door){
-						((Door)levelMap.getTile(t[i].getX(), t[i].getY()-1)).open();
+					if (levelMap.getTile(t[i].getX(), t[i].getY() - 1) instanceof Door) {
+						((Door) levelMap.getTile(t[i].getX(), t[i].getY() - 1)).open();
 					}
-					if(levelMap.getTile(t[i].getX(), t[i].getY()+1) instanceof Door){
-						((Door)levelMap.getTile(t[i].getX(), t[i].getY()+1)).open();
+					if (levelMap.getTile(t[i].getX(), t[i].getY() + 1) instanceof Door) {
+						((Door) levelMap.getTile(t[i].getX(), t[i].getY() + 1)).open();
 					}
-					
-					
-				}else{
+					levelMap.floodFillReachable(t[i].getX(), t[i].getY());
+
+				} else {
 					return true;
 				}
 			}
-			if(t[i] instanceof Key){
+			if (t[i] instanceof Key) {
 				player.addKey();
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
 
-			
-			if(t[i] instanceof Health){
-				player.damage(-((Health)t[i]).health);
+			if (t[i] instanceof Health) {
+				player.damage(-((Health) t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
 
@@ -189,12 +225,12 @@ public class Model {
 
 	}
 
-	public void updateBullets() {
+	public void updateBullets(boolean trigger) {
 
 		for (Bullet b : bullets) {
 			b.move();
 			for (Enemy e : enemyList) {
-				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter / 2 / mapSize) {
+				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter / 1.8 / mapSize) {
 					if (e.hit()) {
 						enemyList.remove(e);
 					}
@@ -209,7 +245,7 @@ public class Model {
 
 					if (((Spawner) t).damage()) {
 
-						levelMap.destroyTile(t.getX(),t.getY());
+						levelMap.destroyTile(t.getX(), t.getY());
 					}
 				}
 				bullets.remove(b);
@@ -217,11 +253,11 @@ public class Model {
 
 		}
 
-//		if (player.shoot()) {
-//			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), player.getHeading());
-//			bullets.add(b);
-//			player.setHeading(player.getHeading() + Math.PI / 48);
-//		}
+		if (trigger && player.shoot()) {
+			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), player.getHeading());
+			bullets.add(b);
+			//player.setHeading(player.getHeading() + Math.PI / 48);
+		}
 	}
 
 	public CopyOnWriteArrayList<Bullet> getBullets() {

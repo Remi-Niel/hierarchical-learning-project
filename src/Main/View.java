@@ -64,6 +64,7 @@ public class View extends JPanel implements Observer {
 		int minDimension = Math.min(getWidth(), getHeight());
 		double relativeSize = 1.0 / map.getSize();
 		int absoluteSquareSize = (int) Math.floor(relativeSize * minDimension);
+		minDimension=absoluteSquareSize*map.getSize();
 		int horizontalOffset = getWidth() - map.getSize() * absoluteSquareSize;
 		int verticalOffset = getHeight() - map.getSize() * absoluteSquareSize;
 		Tile tile;
@@ -116,14 +117,23 @@ public class View extends JPanel implements Observer {
 		}
 		// Paint Enemies
 
+		//System.out.println(model.getEnemyList().size());
 		for (Enemy e : model.getEnemyList()) {
 			g.setColor(Color.red);
 			x = (int) Math.floor((e.getX()) * minDimension) + (horizontalOffset - diameter) / 2;
 			y = (int) Math.floor((e.getY()) * minDimension) + (verticalOffset - diameter) / 2;
 
-			g.fillOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
-			g.setColor(Color.BLACK);
-			g.drawOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
+			if (e instanceof Ghost) {
+				g.fillOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
+				g.setColor(Color.BLACK);
+				g.drawOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
+			} else {
+				g.fillRoundRect(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter),
+						absoluteSquareSize*3/4, absoluteSquareSize*3/4);
+				g.setColor(Color.BLACK);
+				g.drawRoundRect(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter),
+						absoluteSquareSize*3/4, absoluteSquareSize*3/4);
+			}
 		}
 
 		// Paint bullets

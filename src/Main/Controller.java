@@ -19,7 +19,9 @@ public class Controller extends Observable{
 		//System.out.println("update player");
 		m.updatePlayer();
 		//System.out.println("update bullets");
-		m.updateBullets();
+		m.updateBullets(true);
+		//System.out.println("Move enemies");
+		m.moveEnemies();
 		//System.out.println("Notify observers");
 		setChanged();
 		notifyObservers();

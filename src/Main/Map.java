@@ -4,7 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import Assets.Enemy;
+import Assets.Grunt;
 import mapTiles.*;
 
 public class Map {
@@ -14,7 +17,7 @@ public class Map {
 	private int size;
 	private ArrayList<Spawner> spawnerList;
 
-	public Map(String fileName) throws FileNotFoundException {
+	public Map(String fileName, CopyOnWriteArrayList<Enemy> enemyList) throws FileNotFoundException {
 
 		Scanner input = new Scanner(new File("maps/" + fileName));
 		size = Integer.parseInt(input.nextLine());
@@ -49,6 +52,10 @@ public class Map {
 				case 'H':
 					tileMap[x][y] = new Health(x,y);
 					break;
+				case 'G':
+					enemyList.add(new Grunt(x/(double)size,y/(double)size));
+					tileMap[x][y] = new Floor(x,y);
+					break;
 				case 'P':
 					spawnX = x;
 					spawnY = y;
@@ -58,7 +65,7 @@ public class Map {
 			}
 		}
 //		long t=System.currentTimeMillis();
-//		this.floodFillReachable(spawnX, spawnY);
+		this.floodFillReachable(spawnX, spawnY);
 		//System.out.println(System.currentTimeMillis()-t+" ms");
 		//System.out.println(spawnX + " " + spawnY);
 	}

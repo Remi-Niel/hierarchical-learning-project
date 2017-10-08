@@ -2,19 +2,20 @@ package Assets;
 
 public class Player {
 	
-	public final double speed=0.1;
+	public final double speed=0.01;
 	private final int reloadTime=8;
 	private long lastFire=reloadTime;
 	private int health;
 	private double x,y;
 	private double heading; //radians
 	private int keys;
+	private boolean trigger;
 	
 	public Player(double x, double y) {
 		health = 100;
 		this.x=x;
 		this.y=y;
-		heading=1.5*Math.PI;
+		heading=0;
 		keys=0;
 	}
 
