@@ -4,8 +4,8 @@ import mapTiles.Spawner;
 
 public class Ghost extends Enemy {
 	
-	private final static int startingHealth=10;
-	private final static double speed=0.12;
+	private final static int startingHealth=4;
+	private final static double speed=0.08;
 	private Spawner parent;
 	
 	

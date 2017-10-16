@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import AI.*;
 import Assets.*;
 import PathFinder.*;
 import mapTiles.*;
@@ -19,7 +20,9 @@ public class Model {
 	CopyOnWriteArrayList<Bullet> bullets;
 	boolean gameOver = false;
 	ShortestPathFinder p;
-
+	AI ai;
+	
+	
 	public Model(String fileName) {
 		enemyList = new CopyOnWriteArrayList<Enemy>();
 		try {
@@ -211,11 +214,15 @@ public class Model {
 	}
 
 	public void movePlayer() {
+
+		if (ai.getHeading()<0 || ai.shoot())
+			return;
+
 		double x = player.getX();
 		double y = player.getY();
 		double distance = player.speed / mapSize;
-		double dx = Math.cos(player.getHeading()) * distance;
-		double dy = -Math.sin(player.getHeading()) * distance;
+		double dx = Math.cos(ai.getHeading()) * distance;
+		double dy = -Math.sin(ai.getHeading()) * distance;
 		x += dx;
 		y += dy;
 
@@ -225,7 +232,7 @@ public class Model {
 
 	}
 
-	public void updateBullets(boolean trigger) {
+	public void updateBullets() {
 
 		for (Bullet b : bullets) {
 			b.move();
@@ -253,10 +260,9 @@ public class Model {
 
 		}
 
-		if (trigger && player.shoot()) {
-			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), player.getHeading());
+		if (ai.shoot() && ai.getHeading() != -1 && player.shoot()) {
+			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading());
 			bullets.add(b);
-			//player.setHeading(player.getHeading() + Math.PI / 48);
 		}
 	}
 
@@ -274,6 +280,14 @@ public class Model {
 
 	public Player getPlayer() {
 		return player;
+	}
+	
+	public void setAI(AI ai){
+		this.ai=ai;
+	}
+	
+	public double getHeading(){
+		return ai.getHeading();
 	}
 
 }

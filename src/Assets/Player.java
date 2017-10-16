@@ -2,7 +2,7 @@ package Assets;
 
 public class Player {
 	
-	public final double speed=0.01;
+	public final double speed=0.06;
 	private final int reloadTime=8;
 	private long lastFire=reloadTime;
 	private int health;
@@ -15,7 +15,7 @@ public class Player {
 		health = 100;
 		this.x=x;
 		this.y=y;
-		heading=0;
+		heading=-1;
 		keys=0;
 	}
 

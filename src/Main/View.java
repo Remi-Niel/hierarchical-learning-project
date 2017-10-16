@@ -21,9 +21,7 @@ import mapTiles.Tile;
  */
 public class View extends JPanel implements Observer {
 
-	/**
-	 * 
-	 */
+	Double heading=0.0;
 	private static final long serialVersionUID = -7251401100069949488L;
 	Model model;
 
@@ -92,8 +90,11 @@ public class View extends JPanel implements Observer {
 
 		int x = (int) Math.floor((p.getX()) * minDimension) + horizontalOffset / 2;
 		int y = (int) Math.floor((p.getY()) * minDimension) + verticalOffset / 2;
-		double headingL = p.getHeading();
-		double headingH = p.getHeading() - Math.PI;
+		if(model.getHeading()!=-1){
+			heading=model.getHeading();
+		}
+		double headingL = heading;
+		double headingH = heading - Math.PI;
 		double cornerL = headingL - Math.PI / 4;
 		double cornerR = headingL + Math.PI / 4;
 		double radius = (int) Math.floor(minDimension / (map.getSize() * 2));

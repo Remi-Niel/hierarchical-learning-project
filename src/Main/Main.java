@@ -23,7 +23,9 @@ public class Main {
 		frame.setSize(1024, 1000);
 		frame.setVisible(true);
 		
-		Controller c=new Controller(view,model);
+		
+		
+		Controller c=new Controller(view,frame,model);
 		int i=0;
 		Long lastFrame=System.currentTimeMillis();
 		while(true){
