@@ -146,6 +146,9 @@ public class View extends JPanel implements Observer {
 			g.fillOval(x, y, diameter, diameter);
 			g.setColor(Color.BLACK);
 		}
+		g.setColor(Color.RED);
+		g.drawString("Health: "+model.getPlayer().getHealth()+" Keys: "+model.getPlayer().getKeys(), 5, 15);
+		g.drawString("Game Over: "+model.gameOver, getWidth()-100, 15);
 
 	}
 

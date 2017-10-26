@@ -21,8 +21,7 @@ public class Model {
 	boolean gameOver = false;
 	ShortestPathFinder p;
 	AI ai;
-	
-	
+
 	public Model(String fileName) {
 		enemyList = new CopyOnWriteArrayList<Enemy>();
 		try {
@@ -129,24 +128,33 @@ public class Model {
 	public void moveEnemies() {
 		for (Enemy e : enemyList) {
 			if (!levelMap.getTile((int) (e.getX() * levelMap.getSize()), (int) (e.getY() * levelMap.getSize()))
-					.reachable())
+					.reachable()) {
+				e.setHeading(-1);
 				continue;
+			}
+
 			ResultTuple r = p.findPath(e.getX(), e.getY(), player.getX(), player.getY(), e.diameter);
-			if (r.distance > 15)
+			if (r.distance > 20) {
+				e.setHeading(-1);
 				continue;
-			double heading;
-			if (r.distance > 0) {
-				heading = Math.PI / 2 - r.direction * Math.PI / 4;
-				if (heading < 0) {
-					heading += 2 * Math.PI;
+			}
+
+			double heading = e.getHeading();
+			if (heading == -1) {
+				if (r.distance > 0) {
+					heading = Math.PI / 2 - r.direction * Math.PI / 4;
+					if (heading < 0) {
+						heading += 2 * Math.PI;
+					}
+				} else {
+					heading = -Math.atan2(player.getY() - e.getY(), player.getX() - e.getX());
+					if (heading < 0) {
+						heading += 2 * Math.PI;
+					}
+					int d = (int) Math.round(heading * 4 / (Math.PI));
+					heading = d * Math.PI / 4;
 				}
-			} else {
-				heading = -Math.atan2(player.getY() - e.getY(), player.getX() - e.getX());
-				if (heading < 0) {
-					heading += 2 * Math.PI;
-				}
-				int d = (int) Math.round(heading * 4 / (Math.PI));
-				heading = d * Math.PI / 4;
+				e.setHeading(heading);
 			}
 
 			double distance = e.getSpeed() / mapSize;
@@ -207,6 +215,9 @@ public class Model {
 				player.damage(-((Health) t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
+			if (t[i] instanceof Exit) {
+				gameOver=true;
+			}
 
 		}
 
@@ -215,7 +226,7 @@ public class Model {
 
 	public void movePlayer() {
 
-		if (ai.getHeading()<0 || ai.shoot())
+		if (ai.getHeading() < 0 || ai.shoot())
 			return;
 
 		double x = player.getX();
@@ -237,7 +248,7 @@ public class Model {
 		for (Bullet b : bullets) {
 			b.move();
 			for (Enemy e : enemyList) {
-				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter / 1.8 / mapSize) {
+				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter / mapSize) {
 					if (e.hit()) {
 						enemyList.remove(e);
 					}
@@ -281,12 +292,12 @@ public class Model {
 	public Player getPlayer() {
 		return player;
 	}
-	
-	public void setAI(AI ai){
-		this.ai=ai;
+
+	public void setAI(AI ai) {
+		this.ai = ai;
 	}
-	
-	public double getHeading(){
+
+	public double getHeading() {
 		return ai.getHeading();
 	}
 

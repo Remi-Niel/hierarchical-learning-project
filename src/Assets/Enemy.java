@@ -4,10 +4,13 @@ import mapTiles.Spawner;
 
 public abstract class Enemy {
 	
+	final int stepSize=5;
 	public final double diameter =0.95;
 	int health;
 	private double speed;
+	double heading;
 	double x,y;
+	int steps;
 	
 	
 	public Enemy(double x, double y, int startingHealth, double speed) {
@@ -16,6 +19,16 @@ public abstract class Enemy {
 		this.y=y;
 		health=startingHealth;
 		this.setSpeed(speed);
+		heading=-1;
+	}
+
+	public double getHeading() {
+		return heading;
+	}
+
+	public void setHeading(double heading) {
+		this.heading = heading;
+		steps=stepSize;
 	}
 
 	public boolean hit(){
@@ -36,6 +49,9 @@ public abstract class Enemy {
 	public void move(double x,double y){
 		this.x=x;
 		this.y=y;
+		if(--steps<=0){
+			heading=-1;
+		}
 	}
 
 	

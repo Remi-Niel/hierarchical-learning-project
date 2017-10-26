@@ -4,8 +4,8 @@ import java.awt.Color;
 
 public class Spawner extends Tile {
 	private int health;
-	final int spawnTime=75;
-	final int spawnLimit=24;
+	final int spawnTime=200;
+	final int spawnLimit=6;
 	int timer;
 	int spawnCount;
 	
@@ -13,9 +13,9 @@ public class Spawner extends Tile {
 		super(Color.MAGENTA, true,x,y);
 		this.x=x;
 		this.y=y;
-		timer=spawnTime;
+		timer=25;
 		spawnCount=0;
-		health=20;
+		health=8;
 	}
 	
 	public int getX() {

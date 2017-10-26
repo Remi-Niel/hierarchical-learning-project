@@ -75,6 +75,9 @@ public class Player {
 		}
 		return false;
 	}
+	public int getKeys(){
+		return keys;
+	}
 	
 	public void addKey(){
 		keys++;

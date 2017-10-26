@@ -83,22 +83,34 @@ public class ShortestPathFinder {
 				map[i][j] = new Position(i, j, 'n', 1000 * m.getSize(), this.heuristic(i, j, goalX, goalY));
 			}
 		}
-		if (startY > 0)
+		if (startY > 0) {
 			map[startX][startY - 1].set(0, 1);
-		if (startY > 0 && startX < m.getSize() - 1)
-			map[startX + 1][startY - 1].set(1, Math.sqrt(2));
-		if (startX < m.getSize() - 1)
+		}
+		if (startY > 0 && startX < m.getSize() - 1) {
+			if (!m.getTile(startX + 1, startY).getSolid() && !m.getTile(startX, startY - 1).getSolid())
+				map[startX + 1][startY - 1].set(1, Math.sqrt(2));
+		}
+		if (startX < m.getSize() - 1) {
 			map[startX + 1][startY].set(2, 1);
-		if (startX < m.getSize() - 1 && startY < m.getSize() - 1)
-			map[startX + 1][startY + 1].set(3, Math.sqrt(2));
-		if (startY < m.getSize() - 1)
+		}
+		if (startX < m.getSize() - 1 && startY < m.getSize() - 1) {
+			if (!m.getTile(startX + 1, startY).getSolid() && !m.getTile(startX, startY + 1).getSolid())
+				map[startX + 1][startY + 1].set(3, Math.sqrt(2));
+		}
+		if (startY < m.getSize() - 1) {
 			map[startX][startY + 1].set(4, 1);
-		if (startY < m.getSize() - 1 && startX > 0)
-			map[startX - 1][startY + 1].set(5, Math.sqrt(2));
-		if (startX > 0)
+		}
+		if (startY < m.getSize() - 1 && startX > 0) {
+			if (!m.getTile(startX - 1, startY).getSolid() && !m.getTile(startX, startY + 1).getSolid())
+				map[startX - 1][startY + 1].set(5, Math.sqrt(2));
+		}
+		if (startX > 0) {
 			map[startX - 1][startY].set(6, 1);
-		if (startX > 0 && startY > 0)
-			map[startX - 1][startY - 1].set(7, Math.sqrt(2));
+		}
+		if (startX > 0 && startY > 0) {
+			if (!m.getTile(startX - 1, startY).getSolid() && !m.getTile(startX, startY - 1).getSolid())
+				map[startX - 1][startY - 1].set(7, Math.sqrt(2));
+		}
 
 		ResultTuple tuple = new ResultTuple('n', 0);
 		Position s;
@@ -126,19 +138,19 @@ public class ShortestPathFinder {
 				map[s.x][s.y - 1].set(s.direction, s.travelled + 1);
 			}
 
-			if (startY > 0 && startX < m.getSize() - 1) {
+			if (s.y > 0 && s.x < m.getSize() - 1) {
 				if (!m.getTile(s.x + 1, s.y).getSolid() && !m.getTile(s.x, s.y - 1).getSolid())
 					map[s.x + 1][s.y - 1].set(s.direction, s.travelled + Math.sqrt(2));
 			}
-			if (startX < m.getSize() - 1 && startY < m.getSize() - 1) {
+			if (s.x < m.getSize() - 1 && s.y < m.getSize() - 1) {
 				if (!m.getTile(s.x + 1, s.y).getSolid() && !m.getTile(s.x, s.y + 1).getSolid())
 					map[s.x + 1][s.y + 1].set(s.direction, s.travelled + Math.sqrt(2));
 			}
-			if (startY < m.getSize() - 1 && startX > 0) {
+			if (s.y < m.getSize() - 1 && s.x > 0) {
 				if (!m.getTile(s.x - 1, s.y).getSolid() && !m.getTile(s.x, s.y + 1).getSolid())
 					map[s.x - 1][s.y + 1].set(s.direction, s.travelled + Math.sqrt(2));
 			}
-			if (startX > 0 && startY > 0) {
+			if (s.x > 0 && s.y > 0) {
 				if (!m.getTile(s.x - 1, s.y).getSolid() && !m.getTile(s.x, s.y - 1).getSolid())
 					map[s.x - 1][s.y - 1].set(s.direction, s.travelled + Math.sqrt(2));
 			}
