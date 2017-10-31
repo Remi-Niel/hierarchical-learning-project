@@ -12,7 +12,7 @@ public class manualAI implements AI, KeyListener {
 		left=right=up=down=shoot=false;
 	}
 	
-	@Override
+	
 	public void setHeading() {
 		
 		double vertical=-1;

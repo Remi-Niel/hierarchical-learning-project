@@ -8,5 +8,4 @@ public interface AI  {
 	
 	public void reset();
 
-	void setHeading();
 }
