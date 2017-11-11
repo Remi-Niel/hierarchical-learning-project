@@ -6,15 +6,17 @@ public class Bullet {
 	private double x,y;
 	private final double heading; //radians
 	private boolean destroyed=false;
+	private int spawnTime;
 	
 	
 
 
-	public Bullet(double mapSize,double x,double y, double heading) {
+	public Bullet(double mapSize,double x,double y, double heading, int spawnTime) {
 		speed=1/(mapSize*3);
 		this.x=x + (.5/mapSize*Math.cos(heading));
 		this.y=y - (.5/mapSize*Math.sin(heading));
 		this.heading=heading;
+		this.spawnTime=spawnTime;
 	}
 	
 	public void move(){

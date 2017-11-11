@@ -32,7 +32,7 @@ public class Main {
 
 			lastFrame=System.currentTimeMillis();
 			//System.out.println(++i);
-			c.update();
+			c.update(i);
 
 			try {
 				Thread.sleep(Math.max(0, 20-(System.currentTimeMillis()-lastFrame)));
@@ -40,6 +40,7 @@ public class Main {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+			i++;
 		}
 		
 	}

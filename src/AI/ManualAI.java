@@ -3,12 +3,12 @@ package AI;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
-public class manualAI implements AI, KeyListener {
+public class ManualAI implements AI, KeyListener {
 
 	boolean left,right,up,down,shoot;
 	double heading=-1;
 	
-	public manualAI(){
+	public ManualAI(){
 		left=right=up=down=shoot=false;
 	}
 	

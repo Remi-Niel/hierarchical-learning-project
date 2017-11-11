@@ -1,27 +1,30 @@
 package AI;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Queue;
 
 import Neural.NeuralNetwork;
 
-public class behaviour {
+public class Behaviour implements Serializable {
+	private static final long serialVersionUID = 6795916425147912587L;
 	final double gamma = 0.98;
 	NeuralNetwork n;
-	int[] rewardWeights;
+	double[] rewardWeights;
 	int[] inputKey;
-	Queue<double[]> inputs;
-	Queue<Integer> action;
 	int[] size;
+	String ID;
 
-	public behaviour(int[] size, int[] rewardWeights, int[] inputKey) {
+	public Behaviour(int[] size, double[] rewardWeights, int[] inputKey, String ID) {
+		this.ID=ID;
 		n = new NeuralNetwork(size);
 		this.rewardWeights = rewardWeights.clone();
-		inputs = new LinkedList<double[]>();
 		this.inputKey = inputKey.clone();
 		this.size = size;
-		action = new LinkedList<Integer>();
+		if(this.size[0]==-1){
+			this.size[0]=inputKey.length;
+		}
 	}
 
 	private double[] decodeInput(double[] rawInput) {
@@ -32,21 +35,21 @@ public class behaviour {
 		return input;
 	}
 
-	public void updateNetwork(int state, int[] rewards) {
+	public void updateNetwork(State current,State next) {
 		double reward = 0;
 
-		for (int i = 0; i < rewards.length; i++) {
-			reward += rewardWeights[i] * rewards[i];
+		for (int i = 0; i < current.rewards.length; i++) {
+			reward += rewardWeights[i] * current.rewards[i];
 		}
 
 		double[][] activation;
 		double[] expectedOutput;
 		double[] nextExpected;
-		double[] input = inputs.poll();
+		double[] input = current.input;
 		double max;
 
-		if (inputs.size() > 0) {
-			activation = n.forwardProp(decodeInput(inputs.peek()));
+		if (next != null) {
+			activation = n.forwardProp(decodeInput(next.input));
 			nextExpected = activation[size.length - 1].clone();
 			max = Double.NEGATIVE_INFINITY;
 			for (int j = 0; j < nextExpected.length; j++) {
@@ -56,14 +59,13 @@ public class behaviour {
 					max = nextExpected[j];
 				}
 			}
-
 		} else {
 			max = 0;
 		}
 
 		activation = n.forwardProp(input);
 		expectedOutput = activation[size.length - 1].clone();
-		expectedOutput[action.poll()] = reward + gamma * max;
+		expectedOutput[current.action] = reward + gamma * max;
 
 		n.backProp(activation, expectedOutput);
 

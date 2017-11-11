@@ -243,7 +243,7 @@ public class Model {
 
 	}
 
-	public void updateBullets() {
+	public void updateBullets(int time) {
 
 		for (Bullet b : bullets) {
 			b.move();
@@ -272,7 +272,7 @@ public class Model {
 		}
 
 		if (ai.shoot() && ai.getHeading() != -1 && player.shoot()) {
-			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading());
+			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading(),time);
 			bullets.add(b);
 		}
 	}
