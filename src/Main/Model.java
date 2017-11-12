@@ -2,6 +2,8 @@ package Main;
 
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -20,8 +22,9 @@ public class Model {
 	CopyOnWriteArrayList<Bullet> bullets;
 	boolean gameOver = false;
 	ShortestPathFinder p;
+	Queue<State> history;
 	AI ai;
-
+	
 	public Model(String fileName) {
 		enemyList = new CopyOnWriteArrayList<Enemy>();
 		try {
@@ -35,6 +38,11 @@ public class Model {
 		mapSize = (double) levelMap.getSize();
 		player = new Player((levelMap.getSpawnX() + 0.5) / mapSize, (levelMap.getSpawnY() + 0.5) / mapSize);
 
+	}
+	
+	
+	public void setHistory(Queue<State> history) {
+		this.history=history;
 	}
 
 	public double distance(double x1, double x2, double y1, double y2) {
@@ -242,17 +250,33 @@ public class Model {
 		}
 
 	}
+	
+	private void updateHistoryBullet(int t, boolean hit){
+		
+		if(history==null)return;
+		for(State s:((LinkedList<State>)history)){
+			if(s.turnTime==t){
+				s.bulletHit(hit);
+				continue;
+			}
+		}
+		
+	}
 
 	public void updateBullets(int time) {
 
 		for (Bullet b : bullets) {
 			b.move();
+			int bulletTime=b.getSpawnTime();
+			boolean destroyed=false;
+			boolean hit=false;
 			for (Enemy e : enemyList) {
 				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter / mapSize) {
 					if (e.hit()) {
 						enemyList.remove(e);
+						hit=true;
 					}
-
+					destroyed=true;
 					bullets.remove(b);
 					continue;
 				}
@@ -265,9 +289,12 @@ public class Model {
 
 						levelMap.destroyTile(t.getX(), t.getY());
 					}
+					hit=true;
 				}
+				destroyed=true;
 				bullets.remove(b);
 			}
+			if(destroyed)updateHistoryBullet(bulletTime,hit);
 
 		}
 
@@ -300,5 +327,7 @@ public class Model {
 	public double getHeading() {
 		return ai.getHeading();
 	}
+
+	
 
 }

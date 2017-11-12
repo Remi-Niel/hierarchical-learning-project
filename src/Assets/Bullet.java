@@ -11,6 +11,10 @@ public class Bullet {
 	
 
 
+	public int getSpawnTime() {
+		return spawnTime;
+	}
+
 	public Bullet(double mapSize,double x,double y, double heading, int spawnTime) {
 		speed=1/(mapSize*3);
 		this.x=x + (.5/mapSize*Math.cos(heading));

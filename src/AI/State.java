@@ -1,18 +1,20 @@
 package AI;
 
 public class State {
-	int[] rewards=new int[8];
-	int action;
-	double[] input;
-	int turnTime;
-	boolean flyingBullet;
+	public int[] rewards=new int[8];
+	public int action;
+	public int behaviour;
+	public double[] input;
+	public int turnTime;
+	public boolean flyingBullet;
 	
 	
-	public State(int time,boolean shot,double[] input, int a){
+	public State(int time,boolean shot,double[] input, int action, int behaviour){
 		turnTime=time;
 		flyingBullet=shot;
 		this.input=input;
-		action=a;
+		this.action=action;
+		this.behaviour=behaviour;
 	}
 	
 	public void bulletHit(boolean hit){

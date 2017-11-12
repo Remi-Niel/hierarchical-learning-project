@@ -34,8 +34,14 @@ public class Behaviour implements Serializable {
 		}
 		return input;
 	}
+	
+	public double[][] feedForward(double[] rawInput){
+		double[] input=decodeInput(rawInput);
+		return n.forwardProp(input);
+		
+	}
 
-	public void updateNetwork(State current,State next) {
+	public void updateNetwork(State current,State next, boolean mainBehaviour) {
 		double reward = 0;
 
 		for (int i = 0; i < current.rewards.length; i++) {
@@ -65,8 +71,12 @@ public class Behaviour implements Serializable {
 
 		activation = n.forwardProp(input);
 		expectedOutput = activation[size.length - 1].clone();
-		expectedOutput[current.action] = reward + gamma * max;
-
+		if(mainBehaviour){
+			expectedOutput[current.behaviour] = reward + gamma * max;
+		}else{
+			expectedOutput[current.action] = reward + gamma * max;
+			
+		}
 		n.backProp(activation, expectedOutput);
 
 	}
