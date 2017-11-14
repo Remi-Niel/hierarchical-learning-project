@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.Random;
 
 import Assets.Player;
 import Main.Map;
@@ -20,26 +21,32 @@ public class HierarchicalAI implements AI, Serializable {
 	double heading;
 	Behaviour mainBehaviour;
 	int inputs = 15;
-	Behaviour[] subBehaviours = new Behaviour[2];
+	Behaviour[] subBehaviours = new Behaviour[3];
 	int[] sizeMain = { inputs, 100, 50, subBehaviours.length };
 	int[] sizeSub = { -1, 100, 50, 8 };
 	double gamma = .95;
 	double epsilon = .10;
+	double maxEpsilon = .95;
 	double[] input;
 	double[][] activation;
+	Random r;
 	ShortestPathFinder path;
+	boolean learn;
 
 	Queue<State> history;
 
 	public HierarchicalAI(Model m) {
+		learn = true;
 		model = m;
 		history = new LinkedList<State>();
 		m.setHistory(history);
 		path = new ShortestPathFinder(m.getLevelMap());
+		r = new Random();
+		constructBehaviours();
 	}
 
 	private void constructBehaviours() {
-		double[] rewardWeights = new double[] { 20, 0, 0, 2, 2, 2, -50, -2 };
+		double[] rewardWeights = new double[] { 20, 0, 1, 5, 2, 2, -50, -2 };
 		int[] inputKey = new int[inputs];
 		for (int i = 0; i < inputs; i++) {
 			inputKey[i] = i;
@@ -74,43 +81,60 @@ public class HierarchicalAI implements AI, Serializable {
 		 * damaged. We hope when giving it the enemies in its vicinity it will
 		 * learn to dodge those while still reaching its goal.
 		 */
-		rewardWeights = new double[] { 0, 1, 0, 0, 0, 0, -50, -2 };
+		rewardWeights = new double[] { 1, 0, 0, 0, 0, 0, -50, -2 };
 
 		inputKey = new int[] { 10, 11, 12, 13, 14 };
-		subBehaviours[1] = new Behaviour(sizeSub, rewardWeights, inputKey, "Exit");
+		subBehaviours[2] = new Behaviour(sizeSub, rewardWeights, inputKey, "Exit");
 	}
 
 	public void determineAction(int time) {
+
+		this.update();
+
 		double[] input = determineInput();
 		double[][] activation = mainBehaviour.feedForward(input);
-		double[] output = activation[sizeMain.length];
+		double[] output = activation[sizeMain.length - 1];
 		double max = output[0];
 		int behaviour = 0;
 		for (int i = 1; i < output.length; i++) {
-			if (output[i] > max){
+			if (output[i] > max) {
 				max = output[i];
-				behaviour=i;
+				behaviour = i;
 			}
 		}
+		if (learn && r.nextDouble() > .5) {
+			behaviour = r.nextInt(subBehaviours.length);
+		}
+		if (!learn)
+			System.out.println("behaviour: " + subBehaviours[behaviour].ID);
 
 		activation = subBehaviours[behaviour].feedForward(input);
-		output = activation[sizeSub.length];
+		output = activation[sizeSub.length - 1];
 		int action = 0;
-		max=output[0];
+		max = output[0];
 		for (int i = 1; i < output.length; i++) {
-			if (output[i] > max){
+			if (output[i] > max) {
 				max = output[i];
-				action=i;
+				action = i;
 			}
 		}
-		
-		history.add(new State(time,action>=8,input,action,behaviour));
-		
-		heading=(action%8)*Math.PI/4;
-		shoot=action>=8;
-		
+		if (learn && r.nextDouble() > .7) {
+			action = r.nextInt(8);
+		}
+
+		if (!learn)
+			System.out.println("Action: " + action);
+
+		history.add(new State(time, action >= 8, input, action, behaviour));
+
+		heading = (action % 8) * Math.PI / 4;
+		shoot = action >= 8;
+
 	}
 
+	/**
+	 * Constructs and returns the global input for the neural networks.
+	 */
 	public double[] determineInput() {
 		/*
 		 * - Closeness is 1/distance to player, if none reachable infinite
@@ -161,7 +185,7 @@ public class HierarchicalAI implements AI, Serializable {
 		}
 		if (nearestKey == null) {
 			for (int i = 0; i < 5; i++) {
-				input[i] = 0;
+				input[i] = -1;
 			}
 		} else {
 			input[0] = 1.0 / distanceKey;
@@ -173,7 +197,7 @@ public class HierarchicalAI implements AI, Serializable {
 
 		if (nearestDoor == null) {
 			for (int i = 5; i < 10; i++) {
-				input[i] = 0;
+				input[i] = -1;
 			}
 		} else {
 			input[5] = 1.0 / distanceDoor;
@@ -189,7 +213,7 @@ public class HierarchicalAI implements AI, Serializable {
 
 		if (nearestExit == null) {
 			for (int i = 10; i < 15; i++) {
-				input[i] = 0;
+				input[i] = -1;
 			}
 		} else {
 			input[10] = 1.0 / distanceExit;
@@ -207,11 +231,16 @@ public class HierarchicalAI implements AI, Serializable {
 
 	}
 
+	/**
+	 * Makes sure all behaviours learn from previous states for which the final
+	 * reward and following the state are known.
+	 */
 	public void update() {
-		if (history.size() > 1 && !history.peek().flyingBullet
-				&& !((State) ((LinkedList) history).get(2)).flyingBullet) {
+		if (!learn)
+			return;
+		if (history.size() > 1 && !history.peek().flyingBullet) {
 			State current = history.poll();
-			State next = (State) ((LinkedList) history).get(2);
+			State next = history.peek();
 			mainBehaviour.updateNetwork(current, next, true);
 			for (int i = 0; i < subBehaviours.length; i++) {
 				subBehaviours[i].updateNetwork(current, next, false);
@@ -221,7 +250,14 @@ public class HierarchicalAI implements AI, Serializable {
 		;
 	}
 
+	/**
+	 * Should only be used when game is over, the behaviours learn from all yet
+	 * to be processed states whether the state still has a connected bullet
+	 * flying or not.
+	 */
 	public void forceUpdateAll() {
+		if (!learn)
+			return;
 		while (history.size() > 0) {
 			State current = history.poll();
 			State next = history.peek();
@@ -245,9 +281,13 @@ public class HierarchicalAI implements AI, Serializable {
 	}
 
 	@Override
-	public void reset() {
-		// TODO Auto-generated method stub
-
+	public void reset(boolean learn) {
+		this.forceUpdateAll();
+		this.learn = learn;
+		if (learn) {
+			epsilon += 0.01;
+			epsilon = Math.min(epsilon, maxEpsilon);
+		}
 	}
 
 }

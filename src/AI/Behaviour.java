@@ -9,7 +9,7 @@ import Neural.NeuralNetwork;
 
 public class Behaviour implements Serializable {
 	private static final long serialVersionUID = 6795916425147912587L;
-	final double gamma = 0.98;
+	final double gamma = 0.999;
 	NeuralNetwork n;
 	double[] rewardWeights;
 	int[] inputKey;
@@ -18,13 +18,13 @@ public class Behaviour implements Serializable {
 
 	public Behaviour(int[] size, double[] rewardWeights, int[] inputKey, String ID) {
 		this.ID=ID;
-		n = new NeuralNetwork(size);
 		this.rewardWeights = rewardWeights.clone();
 		this.inputKey = inputKey.clone();
 		this.size = size;
 		if(this.size[0]==-1){
 			this.size[0]=inputKey.length;
 		}
+		n = new NeuralNetwork(size);
 	}
 
 	private double[] decodeInput(double[] rawInput) {

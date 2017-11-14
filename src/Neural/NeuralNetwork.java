@@ -13,10 +13,10 @@ public class NeuralNetwork implements Serializable {
 	 double[][][] dWeights;
 	 int[] size;
 	 double[][] activation;
-	 double startingLearningRate = 0.005;
-	 double minLearningRate=0.000001;
-	 double degration=0.7;
-	 double momentum =0.4;
+	 double startingLearningRate = 0.2;
+	 double minLearningRate=0.0001;
+	 double degration=0.8;
+	 double momentum =0.0;
 	 double bias = -1;
 	 double chance;
 	 int epoch, trial;
@@ -143,7 +143,7 @@ public class NeuralNetwork implements Serializable {
 				}
 			}
 		}
-		return error[error.length - 1][0]+error[error.length - 1][1]+error[error.length - 1][2]+error[error.length - 1][3];
+		return 0;
 
 	}
 	

@@ -50,6 +50,10 @@ public class State {
 		rewards[7]++;
 	}
 	
+	public void win(){
+		rewards[0]++;
+	}
+	
 	
 	
 	

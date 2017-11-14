@@ -88,8 +88,8 @@ public class View extends JPanel implements Observer {
 
 		Player p = model.getPlayer();
 
-		int x = (int) Math.floor((p.getX()) * minDimension) + horizontalOffset / 2;
-		int y = (int) Math.floor((p.getY()) * minDimension) + verticalOffset / 2;
+		int x = (int) Math.floor((p.getX()) * minDimension)/map.getSize() + horizontalOffset / 2;
+		int y = (int) Math.floor((p.getY()) * minDimension)/map.getSize() + verticalOffset / 2;
 		if(model.getHeading()!=-1){
 			heading=model.getHeading();
 		}
@@ -121,8 +121,8 @@ public class View extends JPanel implements Observer {
 		//System.out.println(model.getEnemyList().size());
 		for (Enemy e : model.getEnemyList()) {
 			g.setColor(Color.red);
-			x = (int) Math.floor((e.getX()) * minDimension) + (horizontalOffset - diameter) / 2;
-			y = (int) Math.floor((e.getY()) * minDimension) + (verticalOffset - diameter) / 2;
+			x = (int) Math.floor((e.getX()) * minDimension)/map.getSize() + (horizontalOffset - diameter) / 2;
+			y = (int) Math.floor((e.getY()) * minDimension)/map.getSize() + (verticalOffset - diameter) / 2;
 
 			if (e instanceof Ghost) {
 				g.fillOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));

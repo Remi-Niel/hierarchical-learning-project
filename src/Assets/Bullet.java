@@ -16,7 +16,7 @@ public class Bullet {
 	}
 
 	public Bullet(double mapSize,double x,double y, double heading, int spawnTime) {
-		speed=1/(mapSize*3);
+		speed=1/(3);
 		this.x=x + (.5/mapSize*Math.cos(heading));
 		this.y=y - (.5/mapSize*Math.sin(heading));
 		this.heading=heading;

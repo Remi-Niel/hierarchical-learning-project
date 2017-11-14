@@ -64,10 +64,10 @@ public class ShortestPathFinder {
 		queue = new PriorityQueue<Position>();
 		Position[][] map = new Position[m.getSize()][m.getSize()];
 
-		int startX = (int) (x1 * m.getSize());
-		int startY = (int) (y1 * m.getSize());
-		int goalX = (int) (x2 * m.getSize());
-		int goalY = (int) (y2 * m.getSize());
+		int startX = (int) (x1);
+		int startY = (int) (y1);
+		int goalX = (int) (x2);
+		int goalY = (int) (y2);
 
 		// System.out.println(startX +" "+startY +" " + goalX +" "+goalY);
 

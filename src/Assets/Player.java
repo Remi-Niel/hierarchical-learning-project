@@ -2,7 +2,7 @@ package Assets;
 
 public class Player {
 	
-	public final double speed=0.06;
+	public final double speed=0.18;
 	private final int reloadTime=8;
 	private long lastFire=reloadTime;
 	private int health;
@@ -48,8 +48,8 @@ public class Player {
 	}
 	
 	public boolean damage(int damage){
-		health-=damage;
-		System.out.println("health: "+health);
+		health-= 2*damage;
+		//System.out.println("health: "+health);
 		return (health<=0);
 	}
 	

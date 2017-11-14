@@ -67,7 +67,7 @@ public class ManualAI implements AI, KeyListener {
 	}
 
 	@Override
-	public void reset() {
+	public void reset(boolean t) {
 	}
 
 	@Override
@@ -113,6 +113,9 @@ public class ManualAI implements AI, KeyListener {
 		}else if(e.getKeyCode()==KeyEvent.VK_SPACE){
 			shoot=false;
 		}
+	}
+
+	public void determineAction(int time) {
 	}
 
 

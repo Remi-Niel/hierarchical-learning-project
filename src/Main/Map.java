@@ -53,7 +53,7 @@ public class Map {
 					tileMap[x][y] = new Health(x,y);
 					break;
 				case 'G':
-					enemyList.add(new Grunt(x/(double)size,y/(double)size));
+					enemyList.add(new Grunt(x,y));
 					tileMap[x][y] = new Floor(x,y);
 					break;
 				case 'P':
@@ -129,6 +129,17 @@ public class Map {
 
 	public ArrayList<Spawner> getSpawnerList() {
 		return spawnerList;
+	}
+
+	public void open(int x, int y) {
+		if(tileMap[x][y] instanceof Door && ((Door)tileMap[x][y]).getSolid()){
+			((Door)tileMap[x][y]).open();
+			open(x+1,y);
+			open(x-1,y);
+			open(x,y+1);
+			open(x,y-1);
+		}
+		
 	}
 
 }

@@ -23,9 +23,11 @@ public class Model {
 	boolean gameOver = false;
 	ShortestPathFinder p;
 	Queue<State> history;
+	String map;
 	AI ai;
-	
+
 	public Model(String fileName) {
+		map = fileName;
 		enemyList = new CopyOnWriteArrayList<Enemy>();
 		try {
 			levelMap = new Map(fileName, enemyList);
@@ -36,13 +38,12 @@ public class Model {
 		p = new ShortestPathFinder(levelMap);
 		bullets = new CopyOnWriteArrayList<Bullet>();
 		mapSize = (double) levelMap.getSize();
-		player = new Player((levelMap.getSpawnX() + 0.5) / mapSize, (levelMap.getSpawnY() + 0.5) / mapSize);
+		player = new Player((levelMap.getSpawnX() + 0.5), (levelMap.getSpawnY() + 0.5));
 
 	}
-	
-	
+
 	public void setHistory(Queue<State> history) {
-		this.history=history;
+		this.history = history;
 	}
 
 	public double distance(double x1, double x2, double y1, double y2) {
@@ -53,7 +54,7 @@ public class Model {
 	public boolean colidesWithEnemy(double x, double y) {
 
 		for (Enemy e : enemyList) {
-			if (distance(e.getX(), x, e.getY(), y) < e.diameter / mapSize) {
+			if (distance(e.getX(), x, e.getY(), y) < e.diameter) {
 				return true;
 			}
 		}
@@ -62,7 +63,7 @@ public class Model {
 	}
 
 	public boolean legalLocation(double x, double y) {
-		return (x > 0 && y > 0 && x < mapSize && y < mapSize && !colidesWithEnemy((x) / mapSize, (y) / mapSize)
+		return (x > 0 && y > 0 && x < mapSize && y < mapSize && !colidesWithEnemy((x), (y))
 				&& !levelMap.getTile((int) (x), (int) (y)).getSolid());
 
 	}
@@ -123,7 +124,7 @@ public class Model {
 						break;
 				}
 				if (legal)
-					enemyList.add(new Ghost((dX) / mapSize, (dY) / mapSize, s));
+					enemyList.add(new Ghost((dX), (dY), s));
 			}
 		}
 	}
@@ -135,8 +136,7 @@ public class Model {
 
 	public void moveEnemies() {
 		for (Enemy e : enemyList) {
-			if (!levelMap.getTile((int) (e.getX() * levelMap.getSize()), (int) (e.getY() * levelMap.getSize()))
-					.reachable()) {
+			if (!levelMap.getTile((int) (e.getX()), (int) (e.getY())).reachable()) {
 				e.setHeading(-1);
 				continue;
 			}
@@ -165,14 +165,14 @@ public class Model {
 				e.setHeading(heading);
 			}
 
-			double distance = e.getSpeed() / mapSize;
+			double distance = e.getSpeed();
 			double dx = Math.cos(heading) * distance;
 			double dy = -Math.sin(heading) * distance;
 
 			e.move(e.getX() + dx, e.getY() + dy);
 
-			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter / mapSize) {
-				gameOver = player.damage(e.getHealth());
+			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter) {
+				gameOver = gameOver || player.damage(e.getHealth());
 				if (e instanceof Ghost) {
 					((Ghost) e).getParent().decrementCount();
 				}
@@ -187,44 +187,47 @@ public class Model {
 
 		Tile t[] = new Tile[4];
 
-		t[0] = levelMap.getTile((int) (x * mapSize + 0.5), (int) (y * mapSize - 0.5));
-		t[1] = levelMap.getTile((int) (x * mapSize + 0.5), (int) (y * mapSize + 0.5));
-		t[2] = levelMap.getTile((int) (x * mapSize - 0.5), (int) (y * mapSize - 0.5));
-		t[3] = levelMap.getTile((int) (x * mapSize - 0.5), (int) (y * mapSize + 0.5));
+		t[0] = levelMap.getTile((int) (x + 0.5), (int) (y - 0.5));
+		t[1] = levelMap.getTile((int) (x + 0.5), (int) (y + 0.5));
+		t[2] = levelMap.getTile((int) (x - 0.5), (int) (y - 0.5));
+		t[3] = levelMap.getTile((int) (x - 0.5), (int) (y + 0.5));
+		State current = null;
+		if (ai instanceof HierarchicalAI)
+			current = ((LinkedList<State>) history).getLast();
 
 		for (int i = 0; i < 4; i++) {
 			if (t[i].getSolid()) {
-				if (t[i] instanceof Door && player.useKey()) {
-					((Door) t[i]).open();
-					if (levelMap.getTile(t[i].getX() + 1, t[i].getY()) instanceof Door) {
-						((Door) levelMap.getTile(t[i].getX() + 1, t[i].getY())).open();
+				if (t[i] instanceof Door) {
+					if (ai instanceof HierarchicalAI)
+						current.reachedDoor();
+					if (player.useKey()) {
+						if (ai instanceof HierarchicalAI)
+							current.openedDoor();
+						levelMap.open(t[i].getX(),t[i].getY());
+						levelMap.floodFillReachable(t[i].getX(), t[i].getY());
+					}else{
+						return true;
 					}
-					if (levelMap.getTile(t[i].getX() - 1, t[i].getY()) instanceof Door) {
-						((Door) levelMap.getTile(t[i].getX() - 1, t[i].getY())).open();
-					}
-					if (levelMap.getTile(t[i].getX(), t[i].getY() - 1) instanceof Door) {
-						((Door) levelMap.getTile(t[i].getX(), t[i].getY() - 1)).open();
-					}
-					if (levelMap.getTile(t[i].getX(), t[i].getY() + 1) instanceof Door) {
-						((Door) levelMap.getTile(t[i].getX(), t[i].getY() + 1)).open();
-					}
-					levelMap.floodFillReachable(t[i].getX(), t[i].getY());
-
 				} else {
 					return true;
 				}
 			}
 			if (t[i] instanceof Key) {
+				if (ai instanceof HierarchicalAI)
+					current.gotKey();
 				player.addKey();
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
-
 			if (t[i] instanceof Health) {
+				if (ai instanceof HierarchicalAI)
+					current.health();
 				player.damage(-((Health) t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
 			if (t[i] instanceof Exit) {
-				gameOver=true;
+				if (ai instanceof HierarchicalAI)
+					current.win();
+				gameOver = true;
 			}
 
 		}
@@ -239,7 +242,7 @@ public class Model {
 
 		double x = player.getX();
 		double y = player.getY();
-		double distance = player.speed / mapSize;
+		double distance = player.speed;
 		double dx = Math.cos(ai.getHeading()) * distance;
 		double dy = -Math.sin(ai.getHeading()) * distance;
 		x += dx;
@@ -250,38 +253,39 @@ public class Model {
 		}
 
 	}
-	
-	private void updateHistoryBullet(int t, boolean hit){
-		
-		if(history==null)return;
-		for(State s:((LinkedList<State>)history)){
-			if(s.turnTime==t){
+
+	private void updateHistoryBullet(int t, boolean hit) {
+
+		if (history == null)
+			return;
+		for (State s : ((LinkedList<State>) history)) {
+			if (s.turnTime == t) {
 				s.bulletHit(hit);
 				continue;
 			}
 		}
-		
+
 	}
 
 	public void updateBullets(int time) {
 
 		for (Bullet b : bullets) {
 			b.move();
-			int bulletTime=b.getSpawnTime();
-			boolean destroyed=false;
-			boolean hit=false;
+			int bulletTime = b.getSpawnTime();
+			boolean destroyed = false;
+			boolean hit = false;
 			for (Enemy e : enemyList) {
-				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter / mapSize) {
+				if (distance(e.getX(), b.getX(), e.getY(), b.getY()) < e.diameter) {
 					if (e.hit()) {
 						enemyList.remove(e);
-						hit=true;
+						hit = true;
 					}
-					destroyed=true;
+					destroyed = true;
 					bullets.remove(b);
 					continue;
 				}
 			}
-			Tile t = levelMap.getTile((int) (b.getX() * mapSize), (int) (b.getY() * mapSize));
+			Tile t = levelMap.getTile((int) (b.getX()), (int) (b.getY()));
 			if (t.getSolid()) {
 				if (t instanceof Spawner) {
 
@@ -289,17 +293,18 @@ public class Model {
 
 						levelMap.destroyTile(t.getX(), t.getY());
 					}
-					hit=true;
+					hit = true;
 				}
-				destroyed=true;
+				destroyed = true;
 				bullets.remove(b);
 			}
-			if(destroyed)updateHistoryBullet(bulletTime,hit);
+			if (destroyed)
+				updateHistoryBullet(bulletTime, hit);
 
 		}
 
 		if (ai.shoot() && ai.getHeading() != -1 && player.shoot()) {
-			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading(),time);
+			Bullet b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading(), time);
 			bullets.add(b);
 		}
 	}
@@ -328,6 +333,17 @@ public class Model {
 		return ai.getHeading();
 	}
 
-	
+	public void reset() {
+		gameOver = false;
+		enemyList.clear();
+		bullets.clear();
+		try {
+			levelMap = new Map(map, enemyList);
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		player = new Player((levelMap.getSpawnX() + 0.5), (levelMap.getSpawnY() + 0.5));
+	}
 
 }
