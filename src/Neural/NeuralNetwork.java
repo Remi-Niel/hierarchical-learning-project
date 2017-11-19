@@ -1,178 +1,339 @@
 package Neural;
+import java.text.*;
+import java.util.*;
 
-import java.io.Serializable;
-import java.util.Arrays;
-import java.util.Random;
+public class NeuralNetwork {
+	static {
+		Locale.setDefault(Locale.ENGLISH);
+	}
 
-public class NeuralNetwork implements Serializable {
+	final boolean isTrained = false;
+	final DecimalFormat df;
+	final Random rand = new Random();
+	ArrayList<ArrayList<Neuron>> network = new ArrayList<ArrayList<Neuron>>(3);
+	final Neuron bias = new Neuron();
+	final int[] layers;
+	final int randomWeightMultiplier = 1;
+
+	final double epsilon = 0.00000000001;
+
+	final double learningRate = 0.1f;
+	final double momentum = 0.05f;
+
+	// Inputs for xor problem
+	final double inputs[][] = { { 1, 1 }, { 1, 0 }, { 0, 1 }, { 0, 0 } };
+
+	// Corresponding outputs, xor training data
+	final double expectedOutputs[][] = { { 0 }, { 1 }, { 1 }, { 0 } };
+	double resultOutputs[][] = { { -1 }, { -1 }, { -1 }, { -1 } }; // dummy init
+	double output[];
+
+	// for weight update all
+	final HashMap<String, Double> weightUpdate = new HashMap<String, Double>();
+
+	public static void main(String[] args) {
+		NeuralNetwork nn = new NeuralNetwork(new int[] { 2, 30, 20, 1 });
+		int maxRuns = 500000;
+		double minErrorCondition = 0.00001;
+		nn.run(maxRuns, minErrorCondition);
+	}
+
+	public NeuralNetwork(int[] size) {
+		this.layers = size;
+		df = new DecimalFormat("#.0#");
+
+		/**
+		 * Create all neurons and connections Connections are created in the
+		 * neuron class
+		 */
+		for (int i = 0; i < layers.length; i++) {
+			network.add(new ArrayList<Neuron>());
+			for (int j = 0; j < layers[i]; j++) {
+				Neuron neuron = new Neuron();
+				if (i != 0) {
+					neuron.addInConnectionsS(network.get(i - 1));
+					neuron.addBiasConnection(bias);
+				}
+				network.get(i).add(neuron);
+			}
+		}
+		for (ArrayList<Neuron> layer : network.subList(1, network.size())) {
+			for (Neuron neuron : layer) {
+				ArrayList<Connection> connections = neuron.getAllInConnections();
+				for (Connection conn : connections) {
+					double netWeight = getRandom();
+					conn.setWeight(netWeight);
+				}
+			}
+		}
+
+		// reset id counters
+		Neuron.counter = 0;
+		Connection.counter = 0;
+
+		if (isTrained) {
+			trainedWeights();
+			updateAllWeights();
+		}
+	}
+
+	// random
+	double getRandom() {
+		return randomWeightMultiplier * (rand.nextDouble() * 2 - 1); // [-1;1[
+	}
+
 	/**
 	 * 
+	 * @param inputs
+	 *            There is equally many neurons in the input layer as there are
+	 *            in input variables
 	 */
-	 private static final long serialVersionUID = -664522815884100314L;
-	 double[][][] weights;
-	 double[][][] dWeights;
-	 int[] size;
-	 double[][] activation;
-	 double startingLearningRate = 0.2;
-	 double minLearningRate=0.0001;
-	 double degration=0.8;
-	 double momentum =0.0;
-	 double bias = -1;
-	 double chance;
-	 int epoch, trial;
-	
-	
-	public NeuralNetwork(int[] size){
-		this.size=size;
-		activation=new double[size.length][];
-		init();
-	}
-	public void setVariables(double d, int e, int t){
-		chance=d;
-		epoch=e;
-		trial=t;
-	}
-	public double getChance(){
-		return chance;
-	}
-	
-	public int getEpoch(){
-		return epoch;
-	}
-	
-	public int getTrial(){
-		return trial;
-	}
-	
-	
-	private void init(){
-		weights = new double[size.length - 1][][];
-		dWeights=new double [size.length -1][][];
-		for (int i = 0; i < weights.length; i++) {
-			weights[i] = new double[size[i + 1]][size[i]];
-			dWeights[i] = new double[size[i + 1]][size[i]];
+	public void setInput(double inputs[]) {
+		for (int i = 0; i < network.get(0).size(); i++) {
+			network.get(0).get(i).setOutput(inputs[i]);
 		}
+	}
 
-		Random r = new Random(System.currentTimeMillis());
-		for (int i = 0; i < weights.length; i++) {
-			for (int j = 0; j < weights[i].length; j++) {
-				for (int k = 0; k < weights[i][j].length; k++) {
-					weights[i][j][k] = r.nextDouble() * 100 - 50;
-				}
+	public double[] getOutput() {
+		double[] outputs = new double[network.get(network.size() - 1).size()];
+		for (int i = 0; i < network.get(network.size() - 1).size(); i++)
+			outputs[i] = network.get(network.size() - 1).get(i).getOutput();
+		return outputs;
+	}
+
+	/**
+	 * Calculate the output of the neural network based on the input The forward
+	 * operation
+	 */
+	public void activate() {
+
+		for (ArrayList<Neuron> layer : network.subList(1, network.size())) {
+			for (Neuron n : layer) {
+				n.calculateOutput();
 			}
 		}
 	}
 	
-	private static double sigmoid(double in) {
-		return (double) (1 /( Math.exp(-in) + 1));
-	}
-
-	private static double dSigmoid(double in) {
-		double t = sigmoid(in);
-		return t * (1 - t);
+	public double[] forwardProp(double[] input){
+		this.setInput(input);
+		this.activate();
+		return this.getOutput();
 	}
 	
-	public double[][] forwardProp(double[] input){
-		activation = new double[size.length][];
-		activation[0] = Arrays.copyOf(input, input.length);
+	public void backProp(double[] input,double[] expectedOutput){
+		this.setInput(input);
+		this.applyBackpropagation(expectedOutput);
+	}
+
+	/**
+	 * all output propagate back
+	 * 
+	 * @param expectedOutput
+	 *            first calculate the partial derivative of the error with
+	 *            respect to each of the weight leading into the output neurons
+	 *            bias is also updated here
+	 */
+	public void applyBackpropagation(double expectedOutput[]) {
+
 		
-		for (int k = 0; k < size.length - 1; k++) {
-			activation[k+1]=new double[size[k+1]];
-			for (int i = 0; i < weights[k].length; i++) {
-				activation[k+1][i]=0;
-				for (int j = 0; j < weights[k][i].length; j++) {
-					activation[k+1][i] += activation[k][j] *weights[k][i][j];
-				}
-				if (k < size.length - 2) {
-					activation[k+1][i]=sigmoid(activation[k+1][i]);
+		double[][] error = new double[layers.length][];
+		for (int i = 0; i < layers.length; i++) {
+			error[i] = new double[layers[i]];
+		}
+		for (int i = 0; i < expectedOutput.length; i++) {
+			error[layers.length - 1][i] = expectedOutput[i];
+		}
+
+
+		int i = 0;
+		for (Neuron n : network.get(network.size() - 1)) {
+			ArrayList<Connection> connections = n.getAllInConnections();
+			for (Connection con : connections) {
+				double ak = n.getOutput();
+				double ai = con.leftNeuron.getOutput();
+				double desiredOutput = expectedOutput[i];
+
+				double partialDerivative = -ak * (1 - ak) * ai * (desiredOutput - ak);
+				double deltaWeight = -learningRate * partialDerivative;
+				double newWeight = con.getWeight() + deltaWeight;
+				con.setDeltaWeight(deltaWeight);
+				con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
+			}
+			i++;
+		}
+
+		// update weights for the hidden layer
+		for (i = layers.length - 2; i > 0; i--) {
+			int k = 0;
+			for (Neuron n : network.get(i)) {
+				ArrayList<Connection> connections = n.getAllInConnections();
+				for (Connection con : connections) {
+					double aj = n.getOutput();
+					double ai = con.leftNeuron.getOutput();
+					double sumKoutputs = 0;
+					int j = 0;
+					for (Neuron out_neu : network.get(i + 1)) {
+						double wjk = out_neu.getConnection(n.id).getWeight();
+						double ak = out_neu.getOutput();
+						if (i == layers.length - 2) {
+							double desiredOutput = (double) expectedOutput[j];
+							sumKoutputs = sumKoutputs + (-(desiredOutput - ak) * ak * (1 - ak) * wjk);
+						} else {
+							sumKoutputs = sumKoutputs + ((out_neu.getError()) * ak * (1 - ak) * wjk);
+						}
+						j++;
+					}
+					n.setError(sumKoutputs);
+
+					double partialDerivative = aj * (1 - aj) * ai * sumKoutputs;
+					double deltaWeight = -learningRate * partialDerivative;
+					double newWeight = con.getWeight() + deltaWeight;
+					con.setDeltaWeight(deltaWeight);
+					con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
+					k++;
 				}
 			}
 		}
-		return activation;
 	}
-	
-	private static double[] arraySub(double[] A, double[] B) {
-		if (A.length != B.length)
-			System.err.print("Arrays need to be off equals size to substract");
-		double[] C = new double[A.length];
-		for (int i = 0; i < A.length; i++)
-			C[i] = A[i] - B[i];
-		return C;
-	}
-	
-	public double backProp(double[][] activation, double[] expectedOutput) {
-		double[][] error = new double[activation.length][];
 
-		for (int i = 0; i < activation.length; i++) {
-			error[i] = new double[activation[i].length];
-		}
+	void run(int maxSteps, double minError) {
+		int i;
+		// Train neural network until minError reached or maxSteps exceeded
+		double error = 1;
+		for (i = 0; i < maxSteps && error > minError; i++) {
+			error = 0;
+			for (int p = 0; p < inputs.length; p++) {
+				setInput(inputs[p]);
 
-		double[][] delta = new double[size.length][];
-		for (int i = 0; i < delta.length; i++) {
-			delta[i] = new double[size[i]];
-		}
+				activate();
 
-		error[error.length - 1] = arraySub(expectedOutput, activation[activation.length - 1]);
+				output = getOutput();
+				resultOutputs[p] = output;
 
-//		System.out.print(error[error.length - 1][0]+" " );
-//		System.out.print(error[error.length - 1][1]+" " );
-//		System.out.print(error[error.length - 1][2]+" " );
-//		System.out.print(error[error.length - 1][3]+"\n" );
-		for (int k = weights.length - 1; k > 0; k--) {
-			if (k > 0) {
-				error[k] = new double[error[k].length];
-			}
-			for (int i = 0; i < delta[k + 1].length; i++) {
-				if (k != weights.length - 1) {
-					delta[k + 1][i] = error[k + 1][i] * dSigmoid(activation[k + 1][i]);
-				} else {
-					delta[k + 1][i] = error[k + 1][i];
+				for (int j = 0; j < expectedOutputs[p].length; j++) {
+					double err = Math.pow(output[j] - expectedOutputs[p][j], 2);
+					error += err;
 				}
-				for (int j = 0; j < weights[k][i].length; j++) {
-					error[k][j] += delta[k + 1][i] * weights[k][i][j];
-				}
+
+				applyBackpropagation(expectedOutputs[p]);
 			}
 		}
 
-		for (int k = weights.length - 1; k > 0; k--) {
-			for (int i = 0; i < weights[k].length; i++) {
-				for (int j = 0; j < weights[k][i].length; j++) {
-					dWeights[k][i][j] =startingLearningRate * delta[k + 1][i] * activation[k][j]+
-							momentum*dWeights[k][i][j];
-					weights[k][i][j] += dWeights[k][i][j];
+		printResult();
+
+		System.out.println("Sum of squared errors = " + error);
+		System.out.println("##### EPOCH " + i + "\n");
+		if (i == maxSteps) {
+			System.out.println("!Error training try again");
+		} else {
+			//printAllWeights();
+			//printWeightUpdate();
+		}
+	}
+
+	void printResult() {
+		System.out.println("NN example with xor training");
+		for (int p = 0; p < inputs.length; p++) {
+			System.out.print("INPUTS: ");
+			for (int x = 0; x < layers[0]; x++) {
+				System.out.print(inputs[p][x] + " ");
+			}
+
+			System.out.print("EXPECTED: ");
+			for (int x = 0; x < layers[layers.length - 1]; x++) {
+				System.out.print(expectedOutputs[p][x] + " ");
+			}
+
+			System.out.print("ACTUAL: ");
+			for (int x = 0; x < layers[layers.length - 1]; x++) {
+				System.out.print(resultOutputs[p][x] + " ");
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+
+	String weightKey(int neuronId, int conId) {
+		return "N" + neuronId + "_C" + conId;
+	}
+
+	/**
+	 * Take from hash table and put into all weights
+	 */
+	public void updateAllWeights() {
+		// update weights for the output layer
+		for (Neuron n : network.get(network.size() - 1)) {
+			ArrayList<Connection> connections = n.getAllInConnections();
+			for (Connection con : connections) {
+				String key = weightKey(n.id, con.id);
+				double newWeight = weightUpdate.get(key);
+				con.setWeight(newWeight);
+			}
+		}
+		// update weights for the hidden layer
+		for (int i = layers.length - 2; i > 0; i--) {
+			for (Neuron n : network.get(i)) {
+				ArrayList<Connection> connections = n.getAllInConnections();
+				for (Connection con : connections) {
+					String key = weightKey(n.id, con.id);
+					double newWeight = weightUpdate.get(key);
+					con.setWeight(newWeight);
 				}
 			}
 		}
-		return 0;
 
 	}
-	
-	public void degradeRate(){
-		startingLearningRate=Math.max(startingLearningRate *degration,minLearningRate);
+
+	// trained data
+	void trainedWeights() {
+		weightUpdate.clear();
+
+		weightUpdate.put(weightKey(3, 0), 1.03);
+		weightUpdate.put(weightKey(3, 1), 1.13);
+		weightUpdate.put(weightKey(3, 2), -.97);
+		weightUpdate.put(weightKey(4, 3), 7.24);
+		weightUpdate.put(weightKey(4, 4), -3.71);
+		weightUpdate.put(weightKey(4, 5), -.51);
+		weightUpdate.put(weightKey(5, 6), -3.28);
+		weightUpdate.put(weightKey(5, 7), 7.29);
+		weightUpdate.put(weightKey(5, 8), -.05);
+		weightUpdate.put(weightKey(6, 9), 5.86);
+		weightUpdate.put(weightKey(6, 10), 6.03);
+		weightUpdate.put(weightKey(6, 11), .71);
+		weightUpdate.put(weightKey(7, 12), 2.19);
+		weightUpdate.put(weightKey(7, 13), -8.82);
+		weightUpdate.put(weightKey(7, 14), -8.84);
+		weightUpdate.put(weightKey(7, 15), 11.81);
+		weightUpdate.put(weightKey(7, 16), .44);
 	}
-	
-	public boolean sameSize(int[] os){
-		
-		if(size.length != os.length)return false;
-		
-		for(int i=0;i<os.length;i++){
-			if(os[i]!=size[i])return false;
-		}
-		
-		return true;
-	}
-	
-	public void printWeights(){
-		for (int k = 0; k < size.length - 1; k++) {
-			for (int i = 0; i < weights[k].length; i++) {
-				for (int j = 0; j < weights[k][i].length; j++) {
-					System.out.print(weights[k][i][j]+" ");
+
+	public void printWeightUpdate() {
+		System.out.println("printWeightUpdate, put this i trainedWeights() and set isTrained to true");
+		// weights for the hidden layer
+		for (ArrayList<Neuron> layer : network.subList(1, network.size())) {
+			for (Neuron n : layer) {
+				ArrayList<Connection> connections = n.getAllInConnections();
+				for (Connection con : connections) {
+					String w = df.format(con.getWeight());
+					System.out.println("weightUpdate.put(weightKey(" + n.id + ", " + con.id + "), " + w + ");");
 				}
-				System.out.println("");
 			}
-			System.out.println("");
 		}
+		System.out.println();
 	}
-	
-	
+
+	public void printAllWeights() {
+		System.out.println("printAllWeights");
+		// weights for the hidden layer
+		for (ArrayList<Neuron> layer : network.subList(1, network.size())) {
+			for (Neuron n : layer) {
+				ArrayList<Connection> connections = n.getAllInConnections();
+				for (Connection con : connections) {
+					double w = con.getWeight();
+					System.out.println("n=" + n.id + " c=" + con.id + " w=" + w);
+				}
+			}
+		}
+		System.out.println();
+	}
 }

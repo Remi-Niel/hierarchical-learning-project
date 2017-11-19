@@ -29,33 +29,34 @@ public class Main {
 		while (true) {
 
 			if (c.gameover()) {
-				i = 0;
 				if (c.m.player.getHealth() > 0) {
 					wins++;
 				}
 				games++;
-				c.reset(!(games % 20 == 0));
+				c.reset(true);
 
-				System.out.println("Wins: " + wins + ", losses: " + (games - wins));
-			} else if (i > 6000) {
+				System.out.println("Wins: " + wins + ", losses: " + (games - wins) +", frames: "+i);
+
 				i = 0;
+			} else if (i > 6000) {
 				games++;
-				c.reset(!(games % 20 == 0));
-				System.out.println("Wins: " + wins + ", losses: " + (games - wins));
+				c.reset(true);
+				System.out.println("Wins: " + wins + ", losses: " + (games - wins) +", frames: "+i);
+				i = 0;
 			}
 
 			lastFrame = System.currentTimeMillis();
 			// System.out.println(++i);
 			c.update(i);
 
-			if (games>0 && games % 20 == 0) {
-				try {
-					Thread.sleep(Math.max(0, 20 - (System.currentTimeMillis() - lastFrame)));
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
+			//if (games>0 && games % 10 == 0) {
+//				try {
+//					Thread.sleep(Math.max(0, 5 - (System.currentTimeMillis() - lastFrame)));
+//				} catch (InterruptedException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+			//}
 			i++;
 		}
 

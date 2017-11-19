@@ -40,7 +40,7 @@ public class Controller extends Observable {
 		// System.out.println("Move enemies");
 		m.moveEnemies();
 		// System.out.println("Notify observers");
-		if (!learn) {
+		if (learn) {
 			setChanged();
 			notifyObservers();
 		}

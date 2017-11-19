@@ -9,7 +9,7 @@ import Neural.NeuralNetwork;
 
 public class Behaviour implements Serializable {
 	private static final long serialVersionUID = 6795916425147912587L;
-	final double gamma = 0.999;
+	final double gamma = 0.99;
 	NeuralNetwork n;
 	double[] rewardWeights;
 	int[] inputKey;
@@ -35,7 +35,7 @@ public class Behaviour implements Serializable {
 		return input;
 	}
 	
-	public double[][] feedForward(double[] rawInput){
+	public double[] feedForward(double[] rawInput){
 		double[] input=decodeInput(rawInput);
 		return n.forwardProp(input);
 		
@@ -47,37 +47,38 @@ public class Behaviour implements Serializable {
 		for (int i = 0; i < current.rewards.length; i++) {
 			reward += rewardWeights[i] * current.rewards[i];
 		}
-
-		double[][] activation;
+		//System.out.println("Reward: "+reward+"\n");
+		double[] output;
 		double[] expectedOutput;
 		double[] nextExpected;
 		double[] input = current.input;
 		double max;
 
 		if (next != null) {
-			activation = n.forwardProp(decodeInput(next.input));
-			nextExpected = activation[size.length - 1].clone();
-			max = Double.NEGATIVE_INFINITY;
-			for (int j = 0; j < nextExpected.length; j++) {
-				// String str = String.format("%1.2f", nextExpected[j]) + " ";
-				// System.out.print(nextExpected[j]);
+			output = n.forwardProp(decodeInput(next.input));
+			nextExpected = output.clone();
+			max = nextExpected[0];
+			for (int j = 1; j < nextExpected.length; j++) {
+//				String str = String.format("%1.2f", nextExpected[j]) + " ";
+//				System.out.print(str);
 				if (nextExpected[j] > max) {
 					max = nextExpected[j];
 				}
 			}
+			//System.out.println();
 		} else {
 			max = 0;
 		}
-
-		activation = n.forwardProp(input);
-		expectedOutput = activation[size.length - 1].clone();
+		
+		output = n.forwardProp(input);
+		expectedOutput = output.clone();
 		if(mainBehaviour){
 			expectedOutput[current.behaviour] = reward + gamma * max;
 		}else{
 			expectedOutput[current.action] = reward + gamma * max;
 			
 		}
-		n.backProp(activation, expectedOutput);
+		n.backProp(input, expectedOutput);
 
 	}
 
