@@ -17,8 +17,8 @@ public class NeuralNetwork {
 
 	final double epsilon = 0.00000000001;
 
-	final double learningRate = 0.1f;
-	final double momentum = 0.05f;
+	final double learningRate = 0.05f;
+	final double momentum = 0.0125f;
 
 	// Inputs for xor problem
 	final double inputs[][] = { { 1, 1 }, { 1, 0 }, { 0, 1 }, { 0, 0 } };

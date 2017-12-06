@@ -5,6 +5,7 @@ import java.awt.Panel;
 import java.util.Observable;
 
 import AI.*;
+import maxQQ.MaxQQ_AI;
 
 public class Controller extends Observable {
 
@@ -18,7 +19,8 @@ public class Controller extends Observable {
 		this.setChanged();
 		this.notifyObservers();
 		// ai=new ManualAI();
-		ai = new HierarchicalAI(m);
+		//ai = new HierarchicalAI(m);
+		ai=new MaxQQ_AI(m);
 		m.setAI(ai);
 		if (ai instanceof ManualAI) {
 			v.setFocusable(true);
@@ -29,18 +31,23 @@ public class Controller extends Observable {
 		learn = true;
 	}
 
-	public void update(int time) {
-		ai.determineAction(time);
+	public void update(int time, boolean b) {
+		ai.determineAction(time,b);
 		// System.out.println("update player");
 		m.updatePlayer();
+		
+		if(ai instanceof MaxQQ_AI){
+			((MaxQQ_AI)ai).checkTerminate(time);
+		}
+		
 		// System.out.println("update spawners");
 		m.tickSpawners();
 		// System.out.println("update bullets");
 		m.updateBullets(time);
 		// System.out.println("Move enemies");
 		m.moveEnemies();
-		// System.out.println("Notify observers");
-		if (learn) {
+		if (b) {
+			//System.out.println("Notify observers");
 			setChanged();
 			notifyObservers();
 		}
@@ -50,8 +57,8 @@ public class Controller extends Observable {
 		return m.gameOver;
 	}
 
-	public void reset(boolean train) {
-		ai.reset(train);
+	public void reset(boolean train,int time) {
+		ai.reset(train,time);
 		m.reset();
 		learn=train;
 	}

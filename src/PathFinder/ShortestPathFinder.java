@@ -1,170 +1,160 @@
 package PathFinder;
 
-import java.util.PriorityQueue;
+import java.util.*;
 import java.util.Random;
 
 import Main.Map;
+import mapTiles.Door;
 
 public class ShortestPathFinder {
 
-	class Position implements Comparable<Position> {
+	class Position {
 		int x, y;
-		double travelled;
-		double heuristic;
-		double total;
-		int direction;
-		Random rand = new Random();
 
-		public Position(int x, int y, int direction, double travelled, double heuristic) {
+		public Position(int x, int y) {
 			this.x = x;
 			this.y = y;
-			this.direction = direction;
-			this.travelled = travelled;
-			this.heuristic = heuristic;
-			total = heuristic + travelled;
-		}
-
-		public void set(int direction, double travelled) {
-			if (travelled < this.travelled) {
-				this.direction = direction;
-				this.travelled = travelled;
-				total = heuristic + travelled;
-				addState(this);
-			}
-		}
-
-		@Override
-		public int compareTo(Position s) {
-			if (this.total - total == 0) {
-				return 1 - (rand.nextInt(2)) * 2;
-			}
-			if (this.total > s.total) {
-				return 1;
-			} else {
-				return -1;
-			}
 		}
 	}
 
-	private PriorityQueue<Position> queue;
+	final int factor = 10000;
+	int startX;
+	int startY;
+	int goalX;
+	int goalY;
+
+	private Queue<Position> queue;
 	private Map m;
+	private double[][][][] distanceFromTo;
+	boolean[][] map;
 
 	public ShortestPathFinder(Map levelMap) {
 		m = levelMap;
+		map = new boolean[m.getSize()][m.getSize()];
+		int s = m.getSize();
+		distanceFromTo = new double[s][s][s][s];
+		for (int i = 0; i < s; i++) {
+			for (int j = 0; j < s; j++) {
+				for (int k = 0; k < s; k++) {
+					for (int l = 0; l < s; l++) {
+						distanceFromTo[i][j][k][l] = -1;
+					}
+				}
+			}
+		}
+		int startX = 0;
+		int startY = 0;
+		int goalX = 0;
+		int goalY = 0;
+
 	}
 
-	private void addState(Position s) {
-		if (!m.getTile(s.x, s.y).getSolid()) {
-			queue.offer(s);
+	private void addState(Position s, double value) {
+		//System.out.println(map.length);
+		if (!map[s.x][s.y] && (!m.getTile(s.x, s.y).getSolid()) || (m.getTile(s.x, s.y) instanceof Door)) {
+			if (distanceFromTo[startX][startY][s.x][s.y]==-1 || (value < distanceFromTo[startX][startY][s.x][s.y])) {
+				distanceFromTo[startX][startY][s.x][s.y] = value;
+				queue.add(s);
+			}
 		}
 	}
 
 	public ResultTuple findPath(double x1, double y1, double x2, double y2, double diameter) {
+		map = new boolean[m.getSize()][m.getSize()];
 		int direction = -1;
-		queue = new PriorityQueue<Position>();
-		Position[][] map = new Position[m.getSize()][m.getSize()];
+		queue = new LinkedList<Position>();
 
-		int startX = (int) (x1);
-		int startY = (int) (y1);
-		int goalX = (int) (x2);
-		int goalY = (int) (y2);
+		startX = (int) (x1);
+		startY = (int) (y1);
+		goalX = (int) (x2);
+		goalY = (int) (y2);
 
-		// System.out.println(startX +" "+startY +" " + goalX +" "+goalY);
-
-		// if already on correct tile return 'no move'
-		if (this.heuristic(startX, startY, goalX, goalY) <= Math.sqrt(2)) {
-
-			return new ResultTuple(-1, 0);
-
+		distanceFromTo[startX][startY][startX][startY] = 0;
+		
+		if(x2<0||y2<0||x2>=m.getSize()||y2>=m.getSize()){
+			return new ResultTuple(-1,-1);
+		}
+		
+		
+		if (distanceFromTo[startX][startY][goalX][goalY] >= 0) {
+			ResultTuple t = new ResultTuple((int) distanceFromTo[startX][startY][goalX][goalY] / factor,
+					distanceFromTo[startX][startY][goalX][goalY] % factor);
+			return t;
 		}
 
-		for (int i = 0; i < m.getSize(); i++) {
-			for (int j = 0; j < m.getSize(); j++) {
-				map[i][j] = new Position(i, j, 'n', 1000 * m.getSize(), this.heuristic(i, j, goalX, goalY));
-			}
-		}
+		map[startX][startY] = true;
+
 		if (startY > 0) {
-			map[startX][startY - 1].set(0, 1);
+			addState(new Position(startX, startY - 1), 1);
 		}
 		if (startY > 0 && startX < m.getSize() - 1) {
 			if (!m.getTile(startX + 1, startY).getSolid() && !m.getTile(startX, startY - 1).getSolid())
-				map[startX + 1][startY - 1].set(1, Math.sqrt(2));
+				addState(new Position(startX + 1, startY - 1), Math.sqrt(2) + factor);
 		}
 		if (startX < m.getSize() - 1) {
-			map[startX + 1][startY].set(2, 1);
+			addState(new Position(startX + 1, startY), 1 + (2 * factor));
 		}
 		if (startX < m.getSize() - 1 && startY < m.getSize() - 1) {
 			if (!m.getTile(startX + 1, startY).getSolid() && !m.getTile(startX, startY + 1).getSolid())
-				map[startX + 1][startY + 1].set(3, Math.sqrt(2));
+				addState(new Position(startX + 1, startY + 1), Math.sqrt(2) + factor * 3);
 		}
 		if (startY < m.getSize() - 1) {
-			map[startX][startY + 1].set(4, 1);
+			addState(new Position(startX, startY + 1), 1 + factor * 4);
 		}
 		if (startY < m.getSize() - 1 && startX > 0) {
 			if (!m.getTile(startX - 1, startY).getSolid() && !m.getTile(startX, startY + 1).getSolid())
-				map[startX - 1][startY + 1].set(5, Math.sqrt(2));
+				addState(new Position(startX - 1, startY + 1), Math.sqrt(2) + 5 * factor);
 		}
 		if (startX > 0) {
-			map[startX - 1][startY].set(6, 1);
+			addState(new Position(startX - 1, startY), 1 + 6 * factor);
 		}
 		if (startX > 0 && startY > 0) {
 			if (!m.getTile(startX - 1, startY).getSolid() && !m.getTile(startX, startY - 1).getSolid())
-				map[startX - 1][startY - 1].set(7, Math.sqrt(2));
+				addState(new Position(startX - 1, startY - 1), Math.sqrt(2) + 7 * factor);
 		}
 
-		ResultTuple tuple = new ResultTuple('n', 0);
-		Position s;
-		while (queue.size() > 0) {
-
-			s = queue.poll();
-			// System.out.println(s.x +" "+s.y+" "+x2+" "+y2+" "+s.travelled+"
-			// "+queue.size()+" "+s.direction);
-			if (s.x == goalX && s.y == goalY) {
-				// System.out.println(s.direction);
-				tuple.direction = s.direction;
-				tuple.distance = s.total;
+		while (!queue.isEmpty()) {
+			Position p = queue.poll();
+			double distance = distanceFromTo[startX][startY][p.x][p.y] % factor;
+			int action = (int) distanceFromTo[startX][startY][p.x][p.y] / factor;
+			if (p.x == goalX && p.y == goalY) {
 				continue;
 			}
-			if (s.x < m.getSize()) {
-				map[s.x + 1][s.y].set(s.direction, s.travelled + 1);
-			}
-			if (s.x > 0) {
-				map[s.x - 1][s.y].set(s.direction, s.travelled + 1);
-			}
-			if (s.y < m.getSize()) {
-				map[s.x][s.y + 1].set(s.direction, s.travelled + 1);
-			}
-			if (s.y > 0) {
-				map[s.x][s.y - 1].set(s.direction, s.travelled + 1);
-			}
 
-			if (s.y > 0 && s.x < m.getSize() - 1) {
-				if (!m.getTile(s.x + 1, s.y).getSolid() && !m.getTile(s.x, s.y - 1).getSolid())
-					map[s.x + 1][s.y - 1].set(s.direction, s.travelled + Math.sqrt(2));
+			if (p.x > 0) {
+				addState(new Position(p.x, p.y - 1),distance+ 1 + action * factor);
 			}
-			if (s.x < m.getSize() - 1 && s.y < m.getSize() - 1) {
-				if (!m.getTile(s.x + 1, s.y).getSolid() && !m.getTile(s.x, s.y + 1).getSolid())
-					map[s.x + 1][s.y + 1].set(s.direction, s.travelled + Math.sqrt(2));
+			if (p.y > 0 && p.x < m.getSize() - 1) {
+				if (!m.getTile(p.x + 1, p.y).getSolid() && !m.getTile(p.x, p.y - 1).getSolid())
+					addState(new Position(p.x + 1, p.y - 1), distance+Math.sqrt(2) + action * factor);
 			}
-			if (s.y < m.getSize() - 1 && s.x > 0) {
-				if (!m.getTile(s.x - 1, s.y).getSolid() && !m.getTile(s.x, s.y + 1).getSolid())
-					map[s.x - 1][s.y + 1].set(s.direction, s.travelled + Math.sqrt(2));
+			if (p.x < m.getSize() - 1) {
+				addState(new Position(p.x + 1, p.y),distance+ 1 + (action * factor));
 			}
-			if (s.x > 0 && s.y > 0) {
-				if (!m.getTile(s.x - 1, s.y).getSolid() && !m.getTile(s.x, s.y - 1).getSolid())
-					map[s.x - 1][s.y - 1].set(s.direction, s.travelled + Math.sqrt(2));
+			if (p.x < m.getSize() - 1 && p.y < m.getSize() - 1) {
+				if (!m.getTile(p.x + 1, p.y).getSolid() && !m.getTile(p.x, p.y + 1).getSolid())
+					addState(new Position(p.x + 1, p.y + 1),distance+ Math.sqrt(2) + factor * action);
 			}
-
+			if (p.y < m.getSize() - 1) {
+				addState(new Position(p.x, p.y + 1),distance+ 1 + factor * action);
+			}
+			if (p.y < m.getSize() - 1 && p.x > 0) {
+				if (!m.getTile(p.x - 1, p.y).getSolid() && !m.getTile(p.x, p.y + 1).getSolid())
+					addState(new Position(p.x - 1, p.y + 1),distance+ Math.sqrt(2) + action * factor);
+			}
+			if (p.x > 0) {
+				addState(new Position(p.x - 1, p.y),distance+ 1 + action * factor);
+			}
+			if (p.x > 0 && p.y > 0) {
+				if (!m.getTile(p.x - 1, p.y).getSolid() && !m.getTile(p.x, p.y - 1).getSolid())
+					addState(new Position(p.x - 1, p.y - 1),distance+ Math.sqrt(2) + action * factor);
+			}
 		}
-		// System.out.println(direction);
 
-		// System.out.println(direction);
+		ResultTuple t = new ResultTuple((int) distanceFromTo[startX][startY][goalX][goalY] / 100000000,
+				distanceFromTo[startX][startY][goalX][goalY] % 100000000);
+		return t;
 
-		return tuple;
-	}
-
-	private double heuristic(int x1, int y1, int x2, int y2) {
-		return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 	}
 
 }

@@ -108,6 +108,15 @@ public class Map {
 			floodFillReachable(x, y+1);
 		if (y>0 && !getTile(x, y - 1).getSolid() && !getTile(x, y - 1).reachable())
 			floodFillReachable(x, y-1);
+		
+		if (x<getSize() && getTile(x + 1, y) instanceof Door && !getTile(x + 1, y).reachable())
+			getTile(x + 1, y).setReachable(true);
+		if (x>0 && getTile(x - 1, y) instanceof Door && !getTile(x - 1, y).reachable())
+			getTile(x - 1, y).setReachable(true);
+		if (y<getSize() && getTile(x, y+1) instanceof Door && !getTile(x, y + 1).reachable())
+			getTile(x, y+1).setReachable(true);
+		if (y>0 && getTile(x, y-1) instanceof Door && !getTile(x, y - 1).reachable())
+			getTile(x, y-1).setReachable(true);
 
 	}
 

@@ -67,7 +67,7 @@ public class ManualAI implements AI, KeyListener {
 	}
 
 	@Override
-	public void reset(boolean t) {
+	public void reset(boolean t,int time) {
 	}
 
 	@Override
@@ -115,7 +115,7 @@ public class ManualAI implements AI, KeyListener {
 		}
 	}
 
-	public void determineAction(int time) {
+	public void determineAction(int time,boolean b) {
 	}
 
 

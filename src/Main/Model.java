@@ -11,6 +11,7 @@ import AI.*;
 import Assets.*;
 import PathFinder.*;
 import mapTiles.*;
+import maxQQ.MaxQQ_AI;
 
 public class Model {
 
@@ -20,7 +21,7 @@ public class Model {
 	Player player;
 	double mapSize;
 	CopyOnWriteArrayList<Bullet> bullets;
-	boolean gameOver = false;
+	public boolean gameOver = false;
 	ShortestPathFinder p;
 	Queue<State> history;
 	String map;
@@ -200,9 +201,15 @@ public class Model {
 				if (t[i] instanceof Door) {
 					if (ai instanceof HierarchicalAI)
 						current.reachedDoor();
+					if(ai instanceof MaxQQ_AI){
+						((MaxQQ_AI)ai).reachedDoor();
+					}
 					if (player.useKey()) {
 						if (ai instanceof HierarchicalAI)
 							current.openedDoor();
+						if(ai instanceof MaxQQ_AI){
+							((MaxQQ_AI)ai).openedDoor();
+						}
 						levelMap.open(t[i].getX(),t[i].getY());
 						levelMap.floodFillReachable(t[i].getX(), t[i].getY());
 					}else{
@@ -215,6 +222,9 @@ public class Model {
 			if (t[i] instanceof Key) {
 				if (ai instanceof HierarchicalAI)
 					current.gotKey();
+				if(ai instanceof MaxQQ_AI){
+					((MaxQQ_AI)ai).gotKey();
+				}
 				player.addKey();
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
@@ -228,6 +238,9 @@ public class Model {
 				if (ai instanceof HierarchicalAI)
 					current.win();
 				gameOver = true;
+				if(ai instanceof MaxQQ_AI){
+					((MaxQQ_AI)ai).reachedExit();
+				}
 			}
 
 		}

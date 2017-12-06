@@ -88,7 +88,7 @@ public class HierarchicalAI implements AI, Serializable {
 		subBehaviours[2] = new Behaviour(sizeSub, rewardWeights, inputKey, "Exit");
 	}
 
-	public void determineAction(int time) {
+	public void determineAction(int time,boolean b) {
 
 		this.update();
 
@@ -292,7 +292,7 @@ public class HierarchicalAI implements AI, Serializable {
 	}
 
 	@Override
-	public void reset(boolean learn) {
+	public void reset(boolean learn,int time) {
 		this.forceUpdateAll();
 		this.learn = learn;
 		System.out.println(epsilon);

@@ -6,7 +6,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 public class Main {
-
+	final static double frameLim=Double.POSITIVE_INFINITY;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		JFrame frame = new JFrame("Game");
@@ -16,47 +16,48 @@ public class Main {
 
 		Model model = new Model("map");
 		View view = new View(model);
+		Controller c = new Controller(view, frame, model);
 		frame.add(view);
 		frame.pack();
 		frame.setSize(1024, 1000);
 		frame.setVisible(true);
-
-		Controller c = new Controller(view, frame, model);
 		int i = 0;
 		int wins = 0;
 		int games = 0;
 		Long lastFrame = System.currentTimeMillis();
 		while (true) {
-
 			if (c.gameover()) {
 				if (c.m.player.getHealth() > 0) {
 					wins++;
 				}
 				games++;
-				c.reset(true);
+				c.reset(true, i);
 
-				System.out.println("Wins: " + wins + ", losses: " + (games - wins) +", frames: "+i);
+				System.out.println("Wins: " + wins + ", losses: " + (games - wins) + ", frames: " + i);
 
 				i = 0;
-			} else if (i > 6000) {
+				continue;
+			} else if (i > frameLim) {
 				games++;
-				c.reset(true);
-				System.out.println("Wins: " + wins + ", losses: " + (games - wins) +", frames: "+i);
+				c.reset(true, i);
+				System.out.println("Wins: " + wins + ", losses: " + (games - wins) + ", frames: " + i);
 				i = 0;
+				continue;
 			}
 
 			lastFrame = System.currentTimeMillis();
 			// System.out.println(++i);
-			c.update(i);
+			c.update(i,games>0 && (games % 1000 == 0));
 
-			//if (games>0 && games % 10 == 0) {
-//				try {
-//					Thread.sleep(Math.max(0, 5 - (System.currentTimeMillis() - lastFrame)));
-//				} catch (InterruptedException e) {
-//					// TODO Auto-generated catch block
-//					e.printStackTrace();
-//				}
-			//}
+			if (games>0 &&(games % 1000 == 0)) {
+//				 if (true) {
+				try {
+					Thread.sleep(Math.max(0, 20 - (System.currentTimeMillis() - lastFrame)));
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
 			i++;
 		}
 
