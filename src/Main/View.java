@@ -21,7 +21,7 @@ import mapTiles.Tile;
  */
 public class View extends JPanel implements Observer {
 
-	Double heading=0.0;
+	Double heading = 0.0;
 	private static final long serialVersionUID = -7251401100069949488L;
 	Model model;
 
@@ -62,7 +62,7 @@ public class View extends JPanel implements Observer {
 		int minDimension = Math.min(getWidth(), getHeight());
 		double relativeSize = 1.0 / map.getSize();
 		int absoluteSquareSize = (int) Math.floor(relativeSize * minDimension);
-		minDimension=absoluteSquareSize*map.getSize();
+		minDimension = absoluteSquareSize * map.getSize();
 		int horizontalOffset = getWidth() - map.getSize() * absoluteSquareSize;
 		int verticalOffset = getHeight() - map.getSize() * absoluteSquareSize;
 		Tile tile;
@@ -88,10 +88,10 @@ public class View extends JPanel implements Observer {
 
 		Player p = model.getPlayer();
 
-		int x = (int) Math.floor((p.getX()) * minDimension)/map.getSize() + horizontalOffset / 2;
-		int y = (int) Math.floor((p.getY()) * minDimension)/map.getSize() + verticalOffset / 2;
-		if(model.getHeading()!=-1){
-			heading=model.getHeading();
+		int x = (int) Math.floor((p.getX()) * minDimension) / map.getSize() + horizontalOffset / 2;
+		int y = (int) Math.floor((p.getY()) * minDimension) / map.getSize() + verticalOffset / 2;
+		if (model.getHeading() != -1) {
+			heading = model.getHeading();
 		}
 		double headingL = heading;
 		double headingH = heading - Math.PI;
@@ -118,11 +118,11 @@ public class View extends JPanel implements Observer {
 		}
 		// Paint Enemies
 
-		//System.out.println(model.getEnemyList().size());
+		// System.out.println(model.getEnemyList().size());
 		for (Enemy e : model.getEnemyList()) {
 			g.setColor(Color.red);
-			x = (int) Math.floor((e.getX()) * minDimension)/map.getSize() + (horizontalOffset - diameter) / 2;
-			y = (int) Math.floor((e.getY()) * minDimension)/map.getSize() + (verticalOffset - diameter) / 2;
+			x = (int) Math.floor((e.getX()) * minDimension) / map.getSize() + (horizontalOffset - diameter) / 2;
+			y = (int) Math.floor((e.getY()) * minDimension) / map.getSize() + (verticalOffset - diameter) / 2;
 
 			if (e instanceof Ghost) {
 				g.fillOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
@@ -130,25 +130,35 @@ public class View extends JPanel implements Observer {
 				g.drawOval(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter));
 			} else {
 				g.fillRoundRect(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter),
-						absoluteSquareSize*3/4, absoluteSquareSize*3/4);
+						absoluteSquareSize * 3 / 4, absoluteSquareSize * 3 / 4);
 				g.setColor(Color.BLACK);
 				g.drawRoundRect(x, y, (int) Math.floor(diameter * e.diameter), (int) Math.floor(diameter * e.diameter),
-						absoluteSquareSize*3/4, absoluteSquareSize*3/4);
+						absoluteSquareSize * 3 / 4, absoluteSquareSize * 3 / 4);
 			}
 		}
 
-		// Paint bullets
+		// Paint bullet
 
-		for (Bullet b : model.getBullets()) {
+		Bullet b = model.getBullet();
+		if (b != null) {
+			System.out.println("Drawing Line " + b.getX());
+			double mapSize = map.getSize();
 			diameter = Math.max((int) Math.floor(minDimension / map.getSize() / 8), 1);
-			x = (int) Math.floor((b.getX()) * minDimension) + horizontalOffset / 2;
-			y = (int) Math.floor((b.getY()) * minDimension) + verticalOffset / 2;
-			g.fillOval(x, y, diameter, diameter);
+			int x1 = (int) Math.floor((b.getX()) / mapSize * minDimension) + horizontalOffset / 2;
+			int y1 = (int) Math.floor((b.getY()) / mapSize * minDimension) + verticalOffset / 2;
+			int x2 = (int) Math.floor((b.getX() / mapSize + (1 * Math.cos(heading))) * minDimension)
+					+ horizontalOffset / 2;
+			int y2 = (int) Math.floor((b.getY() / mapSize - (1 * Math.sin(heading))) * minDimension)
+					+ verticalOffset / 2;
+
+			System.out.println(x1 + " " + y1 + " " + x2 + " " + y2);
 			g.setColor(Color.BLACK);
+			g.drawLine(x1, y1, x2, y2);
+
 		}
 		g.setColor(Color.RED);
-		g.drawString("Health: "+model.getPlayer().getHealth()+" Keys: "+model.getPlayer().getKeys(), 5, 15);
-		g.drawString("Game Over: "+model.gameOver, getWidth()-100, 15);
+		g.drawString("Health: " + model.getPlayer().getHealth() + " Keys: " + model.getPlayer().getKeys(), 5, 15);
+		g.drawString("Game Over: " + model.gameOver, getWidth() - 100, 15);
 
 	}
 

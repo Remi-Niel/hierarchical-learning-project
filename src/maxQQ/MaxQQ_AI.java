@@ -47,13 +47,13 @@ public class MaxQQ_AI implements AI {
 			primitives[i] = new primitiveAction(i);
 		}
 
-		nav = new Navigate(primitives, new int[] { 5, 15, 8 }, new int[] { 0, 1, 2, 3, 4 }, m, 0);
+		nav = new Navigate(primitives, new int[] { 4, 20, 8 }, new int[] { 1, 2, 3, 4 }, m, 0);
 		getKey = new GetKey(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 0 }, m, 0);
 		goToDoor = new GoToDoor(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 5 }, m, 0);
 		goToExit = new GoToExit(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 10 }, m, 0);
-		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3,4, 2 },
+		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3,20, 2 },
 				new int[] { 0, 5, 15 }, m, 0);
-		root = new Root(new AbstractAction[] { openDoor, goToExit }, new int[] { 3, 6, 2 }, new int[] { 0, 5, 10 }, m,
+		root = new Root(new AbstractAction[] { openDoor, goToExit }, new int[] { 3, 20, 2 }, new int[] { 0, 5, 10 }, m,
 				0);
 
 		actionStack = new Stack<AbstractAction>();
@@ -212,7 +212,7 @@ public class MaxQQ_AI implements AI {
 				if (input[i] > max)
 					max = input[i];
 			}
-			for (int i = 5; i < 10; i++) {
+			for (int i = 6; i < 10; i++) {
 				input[i] = 1 - ((input[i] - min) / (max - min));
 			}
 		}
@@ -289,9 +289,9 @@ public class MaxQQ_AI implements AI {
 				SubTask t = ((SubTask) actionStack.peek());
 				t.reward(s.getInHist(), this.determineInput(), s.getRewardSum(), true, time);
 			}
-			if (s instanceof Root) {
-				System.out.println("Total reward: " + s.getRewardSum());
-			}
+//			if (s instanceof Root) {
+//				System.out.println("Total reward: " + s.getRewardSum());
+//			}
 			s.finish();
 		}
 		root.updateDiscount();

@@ -45,6 +45,7 @@ public class GoToExit extends SubTask {
 
 		if (sub instanceof Navigate) {
 			if (nearestExit != null) {
+				//System.out.println("Exit x= "+nearestExit.getX()+" Exit y= "+nearestExit.getY());
 				((Navigate) sub).setTarget(nearestExit.getX(), nearestExit.getY(), "exit");
 			}else{
 				((Navigate) sub).setTarget(-1, -1, "exit");
@@ -62,7 +63,7 @@ public class GoToExit extends SubTask {
 			return true;
 		} else if (input[10] == -1) { // No reachable exit
 			//System.out.println("Terminating "+this.getClass()+" no exit reachable " +input[10]);
-			currentReward += Math.pow(discountfactor, time - this.startTime) * -10;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -10;
 			return true;
 		}
 		return false;

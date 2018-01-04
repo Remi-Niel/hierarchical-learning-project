@@ -19,11 +19,11 @@ public class OpenDoor extends SubTask {
 		if (isOpenedDoor()) {
 			System.out.println("Opened the door");
 			openedDoor = false;
-			currentReward += Math.pow(discountfactor, time - this.startTime) * 10;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * 5;
 			return true;
 		} else if (input[5] == -1) { // No reachable door exists
-			System.out.println("Terminating "+this.getClass()+" no door reachable " +input[5]);
-			currentReward += Math.pow(discountfactor, time - this.startTime) * -10;
+			//System.out.println("Terminating "+this.getClass()+" no door reachable " +input[5]);
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
 			return true;
 		}
 		return false;

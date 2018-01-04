@@ -9,7 +9,7 @@ public class NeuralNetwork {
 
 	final boolean isTrained = false;
 	final DecimalFormat df;
-	final Random rand = new Random();
+	final Random rand = new Random(System.currentTimeMillis());
 	ArrayList<ArrayList<Neuron>> network = new ArrayList<ArrayList<Neuron>>(3);
 	final Neuron bias = new Neuron();
 	final int[] layers;
@@ -17,7 +17,7 @@ public class NeuralNetwork {
 
 	final double epsilon = 0.00000000001;
 
-	final double learningRate = 0.05f;
+	final double learningRate = 0.001f;
 	final double momentum = 0.0125f;
 
 	// Inputs for xor problem

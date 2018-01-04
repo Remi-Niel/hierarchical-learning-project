@@ -47,12 +47,13 @@ public class Navigate extends SubTask {
 //			System.out.print(input[i]+"   ");
 //		}
 //		System.out.println("");
-		if(((int)model.getPlayer().getX())==targetX && ((int)model.getPlayer().getY())==targetY){
+		if(((int)model.getPlayer().getX())==targetX && ((int)model.getPlayer().getY())==targetY || (model.gameOver&&model.getPlayer().getHealth()>0)){
+			currentPseudoReward+=Math.pow(discountfactor, time - this.lastActionTime) * 10;
 			return true;
 		}
 		double distance=path.findPath(model.getPlayer().getX(), model.getPlayer().getX(), targetX, targetY, 0.95).distance;
 		//System.out.println("NAVIGATE:"+targetX+" "+targetY+" "+model.getPlayer().getX()+" "+model.getPlayer().getY()+" "+distance);
-		currentPseudoReward+=Math.pow(discountfactor, time - this.lastActionTime) * previousDistance-distance;
+		//currentPseudoReward+=Math.pow(discountfactor, time - this.lastActionTime) * (previousDistance-distance);
 		//System.out.println("Pseudoreward: "+this.currentPseudoReward);
 		previousDistance=distance;
 		//currentReward += Math.pow(discountfactor, time - this.startTime) * -.5;

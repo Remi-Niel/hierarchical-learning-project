@@ -62,11 +62,11 @@ public class GetKey extends SubTask {
 	public boolean finished(double[] input, Model model, int time) {
 		if (gotKey) {
 			gotKey = false;
-			currentReward += Math.pow(discountfactor, time - this.startTime) * 10;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * 5;
 			return true;
 		} else if (input[0] == -1) {//No reachable key
 			//System.out.println("Terminating "+this.getClass()+" no key reachable " +input[0]);
-			currentReward += Math.pow(discountfactor, time - this.startTime) * -10;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
 			return true;
 		}
 		return false;

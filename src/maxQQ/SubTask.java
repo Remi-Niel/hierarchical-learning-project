@@ -6,13 +6,14 @@ import java.util.Random;
 import Main.Model;
 import Neural.NeuralNetwork;
 import maxQQ.tasks.Navigate;
+import maxQQ.tasks.Root;
 
 public abstract class SubTask implements AbstractAction {
 
-	protected double discountfactor = 0.998;
-	double epsilon = 0.1;
+	protected double discountfactor = 0.9999;
+	protected double epsilon = 0.1;
 	double maxEpsilon = .99;
-	double epsilonIncrement=0.001;
+	double epsilonIncrement=0.00001;
 	private AbstractAction[] subTasks;
 	NeuralNetwork net;
 	protected Model model;
@@ -24,8 +25,33 @@ public abstract class SubTask implements AbstractAction {
 	protected double rewardSum;
 	protected double currentReward;
 	protected double currentPseudoReward;
+	protected double temp=10000;
 	ArrayList<double[]> inputHistory;
+	int windowSize=1000;
+	MovingAverage avg;
 	Random rand;
+	
+	public class MovingAverage {
+	    private double [] window;
+	    private int n, insert;
+	    private long sum;
+
+	    public MovingAverage(int size) {
+	        window = new double[size];
+	        insert = 0;
+	        sum = 0;
+	    }
+
+	    public double next(double val) {
+	        if (n < window.length)  n++;
+	        sum -= window[insert];
+	        sum += val;
+	        window[insert] = val;
+	        insert = (insert + 1) % window.length;
+	        return (double)sum / n;
+	    }
+	}
+	
 	
 	public SubTask(AbstractAction[] as, int[] size, int[] inputKey, Model m, int time) {
 		subTasks = as.clone();
@@ -36,6 +62,7 @@ public abstract class SubTask implements AbstractAction {
 		startTime = time;
 		inputHistory = new ArrayList<double[]>();
 		rewardSum = currentReward=rewarded = 0;
+		avg=new MovingAverage(windowSize);
 	}
 
 	@Override
@@ -62,20 +89,41 @@ public abstract class SubTask implements AbstractAction {
 		double[] input = decodeInput(rawInput);
 		double[] out = net.forwardProp(input);
 
-		//System.out.print(out[0]+" ");
-		double max = out[0];
-		int h = 0;
-		for (int i = 1; i < out.length; i++) {
-			//System.out.print(out[i]+" ");
-			if (max < out[i]) {
-				max = out[i];
-				h = i;
+		double sum=0;
+		double normalized[]=new double[out.length];
+		
+		for(int i=0;i<out.length;i++){
+			normalized[i]=Math.exp(out[i]/temp);
+			sum+=normalized[i];
+		}
+		
+		double r=rand.nextDouble();
+		double chanceSum=0;
+		int h=-1;
+		
+		for(int i=0;i<out.length;i++){
+			normalized[i] /= sum;
+			chanceSum+=normalized[i];
+			if(r<=chanceSum){
+				h=i;
+				break;
 			}
-		}
-		//System.out.println("");
-		if((rand.nextDouble()>epsilon)){
-			h=rand.nextInt(out.length);
-		}
+		}		
+		
+		//System.out.print(out[0]+" ");
+//		double max = out[0];
+//		int h = 0;
+//		for (int i = 1; i < out.length; i++) {
+//			//System.out.print(out[i]+" ");
+//			if (max < out[i]) {
+//				max = out[i];
+//				h = i;
+//			}
+//		}
+//		//System.out.println("");
+//		if((rand.nextDouble()>epsilon)){
+//			h=rand.nextInt(out.length);
+//		}
 		chosenAction = h;
 		return subTasks[h];
 	}
@@ -106,6 +154,8 @@ public abstract class SubTask implements AbstractAction {
 			net.backProp(in, out.clone());
 			local = local / discountfactor;
 		}
+		
+		if((this instanceof Root) && terminate)System.out.println("Average final reward last "+windowSize+" trials: "+this.avg.next(this.rewardSum));
 
 		currentReward = currentPseudoReward = 0;
 	}
@@ -146,6 +196,9 @@ public abstract class SubTask implements AbstractAction {
 	public void updateDiscount(){
 		epsilon += epsilonIncrement;
 		epsilon = Math.min(epsilon, maxEpsilon);
+		temp = .999*temp;
+		temp=Math.max(temp, 1);
+		
 //		System.out.println(this.getClass()+ " epsilon: "+epsilon);
 	}
 

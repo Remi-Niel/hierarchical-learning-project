@@ -14,7 +14,6 @@ public class ManualAI implements AI, KeyListener {
 	
 	
 	public void setHeading() {
-		
 		double vertical=-1;
 		double horizontal=-1;
 		double heading=0;
