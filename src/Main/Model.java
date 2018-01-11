@@ -20,6 +20,8 @@ public class Model {
 	CopyOnWriteArrayList<Enemy> enemyList;
 	Player player;
 	double mapSize;
+	boolean enemyMap[][];
+	double bulletDist;
 	Bullet b;
 	public boolean gameOver = false;
 	ShortestPathFinder p;
@@ -27,6 +29,9 @@ public class Model {
 	String map;
 	AI ai;
 	final int timeLimit = 100000;
+	public boolean enemyDied;
+	public boolean enemyDamaged;
+	public boolean playerDamaged;
 
 	public Model(String fileName) {
 		map = fileName;
@@ -36,11 +41,14 @@ public class Model {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		System.out.println(enemyList.size());
+		//System.out.println(enemyList.size());
 		p = new ShortestPathFinder(levelMap);
 		mapSize = (double) levelMap.getSize();
+		enemyMap = new boolean[levelMap.getSize()][levelMap.getSize()];
 		player = new Player((levelMap.getSpawnX() + 0.5), (levelMap.getSpawnY() + 0.5));
-
+		enemyDied = false;
+		enemyDamaged=false;
+		playerDamaged=false;
 	}
 
 	public void setHistory(Queue<State> history) {
@@ -139,15 +147,32 @@ public class Model {
 		}
 	}
 
+	public void updateEnemyMap() {
+		enemyMap = new boolean[levelMap.getSize()][levelMap.getSize()];
+
+		for (Enemy e : enemyList) {
+			enemyMap[(int) e.getX()][(int) e.getY()] = true;
+		}
+		
+		for(Tile[] ts:levelMap.getTileMap()){
+			for(Tile t:ts){
+				if(t instanceof Spawner){
+					enemyMap[t.getX()][t.getY()]=true;
+				}
+			}
+		}
+		
+	}
+
 	public void moveEnemies() {
 		for (Enemy e : enemyList) {
 			if (!levelMap.getTile((int) (e.getX()), (int) (e.getY())).reachable()) {
 				e.setHeading(-1);
 				continue;
 			}
-			
-//			System.out.println(e.getX()+" "+player.getX());
-			
+
+			// System.out.println(e.getX()+" "+player.getX());
+
 			ResultTuple r = p.findPath(e.getX(), e.getY(), player.getX(), player.getY(), e.diameter);
 			if (r.distance > 10) {
 				e.setHeading(-1);
@@ -157,8 +182,8 @@ public class Model {
 			double heading = e.getHeading();
 			if (heading == -1) {
 				if (r.distance > 0) {
-					System.out.println(r.direction);
-					heading = Math.PI/2 - r.direction * Math.PI / 4;
+					//System.out.println(r.direction);
+					heading = Math.PI / 2 - r.direction * Math.PI / 4;
 					if (heading < 0) {
 						heading += 2 * Math.PI;
 					}
@@ -180,15 +205,22 @@ public class Model {
 			e.move(e.getX() + dx, e.getY() + dy);
 
 			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter) {
+				this.playerDamaged=true;
 				gameOver = gameOver || player.damage(e.getHealth());
 				if (e instanceof Ghost) {
 					((Ghost) e).getParent().decrementCount();
 				}
 				enemyList.remove(e);
+				enemyDied = true;
+				if (ai instanceof HierarchicalAI) {
+					((LinkedList<State>) history).getLast().damagedEnemy();
+					((LinkedList<State>) history).getLast().damaged();
+				}
 
 			}
 
 		}
+		updateEnemyMap();
 	}
 
 	public boolean collides(double x, double y) {
@@ -238,6 +270,7 @@ public class Model {
 			if (t[i] instanceof Health) {
 				if (ai instanceof HierarchicalAI)
 					current.health();
+				this.playerDamaged=true;
 				player.damage(-((Health) t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
@@ -256,7 +289,7 @@ public class Model {
 	}
 
 	public void movePlayer() {
-		if (ai.getHeading() < 0 || ai.shoot())
+		if (ai.getHeading() < 0 || (ai.shoot() && player.loaded()))
 			return;
 
 		double x = player.getX();
@@ -292,9 +325,9 @@ public class Model {
 	public double bulletDistance(double x, double y) {
 
 		double x1 = b.getX();
-		double y1 = b.getX();
-		double x2 = x1 + (.5 / mapSize * Math.cos(b.getHeading()));
-		double y2 = y1 - (.5 / mapSize * Math.sin(b.getHeading()));
+		double y1 = b.getY();
+		double x2 = x1 + (1000 / mapSize * Math.cos(b.getHeading()));
+		double y2 = y1 - (1000 / mapSize * Math.sin(b.getHeading()));
 
 		double ch = (y1 - y2) * x + (x2 - x1) * y + (x1 * y2 - x2 * y1);
 		double del = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
@@ -311,31 +344,64 @@ public class Model {
 			int bulletTime = b.getSpawnTime();
 			boolean destroyed = false;
 			boolean hit = false;
+			double minDist = Double.MAX_VALUE;
+			Spawner closest = null;
+			for (Tile[] ts : levelMap.getTileMap()) {
+				for (Tile t : ts) {
+
+					double heading = -Math.atan2(t.getY() - player.getY(), t.getX() - player.getX());
+					if (heading < 0)
+						heading += 2 * Math.PI;
+
+					double relativeHeading = Math.abs(heading - ai.getHeading());
+
+					if (relativeHeading < Math.PI / 2 && t.getSolid()
+							&& Math.abs(bulletDistance(t.getX(), t.getY())) < 1.5) {
+						if (distance(player.getX(), t.getX(), player.getY(), t.getY()) < minDist) {
+							minDist = distance(player.getX(), t.getX(), player.getY(), t.getY());
+							if (t instanceof Spawner) {
+								closest = (Spawner) t;
+							}
+						}
+						destroyed = true;
+					}
+				}
+			}
+
+			if (closest != null) {
+
+				if (closest.damage()) {
+
+					levelMap.destroyTile(closest.getX(), closest.getY());
+					enemyDied=true;
+				}else{
+					enemyDamaged=true;
+				}
+				hit = true;
+			}
+			// System.out.println("Test");
+			bulletDist = minDist;
 			for (Enemy e : enemyList) {
-				if (Math.abs(bulletDistance(e.getX(), e.getY())) < 2) {
-					System.out.println("Hit!");
-					if (e.hit()) {
+				double heading = -Math.atan2(e.getY() - player.getY(), e.getX() - player.getX());
+				if (heading < 0)
+					heading += 2 * Math.PI;
+
+				double relativeHeading = Math.abs(heading - ai.getHeading());
+
+				// System.out.println("Enemy:
+				// "+Math.abs(bulletDistance(e.getX(), e.getY()))+",
+				// "+(heading)+", "+ai.getHeading()+", "+relativeHeading);
+
+				if (relativeHeading < Math.PI / 2 && Math.abs(bulletDistance(e.getX(), e.getY())) < 1.5) {
+					// System.out.println("Hit!");
+					enemyDamaged=true;
+					if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < minDist && e.hit()) {
 						enemyList.remove(e);
+						enemyDied = true;
 						hit = true;
 					}
 					destroyed = true;
 					continue;
-				}
-			}
-			for (Tile[] ts : levelMap.getTileMap()) {
-				for (Tile t : ts) {
-					if (t.getSolid() && bulletDistance(t.getX(),t.getY())<1) {
-						//System.out.println("test");
-						if (t instanceof Spawner) {
-
-							if (((Spawner) t).damage()) {
-
-								levelMap.destroyTile(t.getX(), t.getY());
-							}
-							hit = true;
-						}
-						destroyed = true;
-					}
 				}
 			}
 			if (destroyed)
@@ -343,6 +409,7 @@ public class Model {
 			b = null;
 		}
 		if (ai.shoot() && ai.getHeading() != -1 && player.shoot()) {
+			//System.out.println("Shoot!!!");
 			b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading(), time);
 		}
 	}
@@ -384,4 +451,7 @@ public class Model {
 		player = new Player((levelMap.getSpawnX() + 0.5), (levelMap.getSpawnY() + 0.5));
 	}
 
+	public boolean[][] getEnemyMap() {
+		return enemyMap;
+	}
 }

@@ -39,7 +39,7 @@ public class Spawner extends Tile {
 	
 	public void decrementCount(){
 		spawnCount--;
-		System.out.println("Count: "+spawnCount);
+		//System.out.println("Count: "+spawnCount);
 	}
 	
 	public boolean damage(){

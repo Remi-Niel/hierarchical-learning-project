@@ -7,7 +7,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 public class Main {
-	final static double frameLim=Double.POSITIVE_INFINITY;
+	final static double frameLim=10000;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		JFrame frame = new JFrame("Game");
@@ -28,6 +28,7 @@ public class Main {
 		int games = 0;
 		Long lastFrame = System.currentTimeMillis();
 		while (true) {
+			//if(i%100==0)System.out.println(i);
 			if (c.gameover()) {
 				if (c.m.player.getHealth() > 0) {
 					wins++;
@@ -49,13 +50,12 @@ public class Main {
 
 			lastFrame = System.currentTimeMillis();
 			// System.out.println(++i);
-			c.update(i,games>0 && (games % 1000 == 0));
+			c.update(i,(games % 1000 == 0));
 
-//			if (games>0 &&(games % 1000 == 0)) {
-			//System.out.println("test");
-			if (true) {
+			if (games > 0 && (games % 100 == 0)) {
+//			if (true) {
 				try {
-					Thread.sleep(Math.max(0, 20 - (System.currentTimeMillis() - lastFrame)));
+					Thread.sleep(Math.max(0, 100 - (System.currentTimeMillis() - lastFrame)));
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();

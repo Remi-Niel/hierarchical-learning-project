@@ -7,9 +7,17 @@ public class Bullet {
 	private final double heading; //radians
 	private boolean destroyed=false;
 	private int spawnTime;
-	
+	private double wallDistance;
 	
 
+
+	public double getWallDistance() {
+		return wallDistance;
+	}
+
+	public void setWallDistance(double wallDistance) {
+		this.wallDistance = wallDistance;
+	}
 
 	public int getSpawnTime() {
 		return spawnTime;

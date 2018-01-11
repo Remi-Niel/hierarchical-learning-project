@@ -58,6 +58,10 @@ public class Player {
 		this.y=y;
 	}
 	
+	public boolean loaded(){
+		return lastFire>=reloadTime;
+	}
+	
 	public boolean shoot(){
 		if(lastFire>=reloadTime){
 			lastFire=0;

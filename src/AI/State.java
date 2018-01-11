@@ -1,7 +1,7 @@
 package AI;
 
 public class State {
-	public int[] rewards=new int[8];
+	public double[] rewards=new double[11];
 	public int action;
 	public int behaviour;
 	public double[] input;
@@ -9,9 +9,9 @@ public class State {
 	public boolean flyingBullet;
 	
 	
-	public State(int time,boolean shot,double[] input, int action, int behaviour){
+	public State(int time,double[] input, int action, int behaviour){
 		turnTime=time;
-		flyingBullet=shot;
+		flyingBullet=false;
 		this.input=input;
 		this.action=action;
 		this.behaviour=behaviour;

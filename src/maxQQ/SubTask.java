@@ -1,6 +1,7 @@
 package maxQQ;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Random;
 
 import Main.Model;
@@ -25,7 +26,7 @@ public abstract class SubTask implements AbstractAction {
 	protected double rewardSum;
 	protected double currentReward;
 	protected double currentPseudoReward;
-	protected double temp=10000;
+	protected double temp=1000;
 	ArrayList<double[]> inputHistory;
 	int windowSize=1000;
 	MovingAverage avg;
@@ -125,7 +126,17 @@ public abstract class SubTask implements AbstractAction {
 //			h=rand.nextInt(out.length);
 //		}
 		chosenAction = h;
-		return subTasks[h];
+		if(h==-1){
+			System.out.println(Arrays.toString(rawInput));
+			System.out.println(Arrays.toString(normalized));
+			System.out.println(Arrays.toString(out));
+			System.err.println("Softmax did not return value for some reason, last option is assumed");
+			chosenAction=out.length-1;
+			System.exit(1);
+		}
+		//System.out.println(chosenAction);
+		
+		return subTasks[chosenAction];
 	}
 
 	public void reward(ArrayList<double[]> inHist, double[] current, double reward, boolean terminate,int time) {

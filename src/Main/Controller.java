@@ -18,9 +18,9 @@ public class Controller extends Observable {
 		this.m = m;
 		this.setChanged();
 		this.notifyObservers();
-		ai=new ManualAI();
-		//ai = new HierarchicalAI(m);
-		//ai=new MaxQQ_AI(m);
+//		ai=new ManualAI();
+//		ai = new HierarchicalAI(m);
+		ai=new MaxQQ_AI(m);
 		m.setAI(ai);
 		if (ai instanceof ManualAI) {
 			v.setFocusable(true);
@@ -33,6 +33,9 @@ public class Controller extends Observable {
 
 	public void update(int time, boolean b) {
 		ai.determineAction(time,b);
+		m.playerDamaged=false;
+		m.enemyDamaged=true;
+		m.enemyDied=false;
 		// System.out.println("update player");
 		m.updatePlayer(time);
 		
@@ -46,7 +49,7 @@ public class Controller extends Observable {
 		m.updateBullets(time);
 		// System.out.println("Move enemies");
 		m.moveEnemies();
-		if (true) {
+		if (b) {
 			//System.out.println("Notify observers");
 			setChanged();
 			notifyObservers();
