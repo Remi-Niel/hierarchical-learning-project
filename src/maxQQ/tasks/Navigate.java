@@ -1,8 +1,16 @@
 package maxQQ.tasks;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.Arrays;
 
 import Main.Model;
+import Neural.NeuralNetwork;
 import PathFinder.ShortestPathFinder;
 import maxQQ.AbstractAction;
 import maxQQ.SubTask;
@@ -11,7 +19,9 @@ public class Navigate extends SubTask {
 	int targetX, targetY;
 	double previousDistance;
 	int[] key;
-	ShortestPathFinder path;
+	transient ShortestPathFinder path;
+	public String target;
+	boolean done;
 
 	public Navigate(AbstractAction[] as, int[] size, int[] inputKey, Model m, int time) {
 		super(as, size, inputKey, m, time);
@@ -20,7 +30,13 @@ public class Navigate extends SubTask {
 		path = new ShortestPathFinder(m.getLevelMap());
 	}
 
+	public void setModel(Model m, int time) {
+		super.setModel(m, time);
+		path = new ShortestPathFinder(m.getLevelMap());
+	}
+
 	public void setTarget(int targetX, int targetY, String type) {
+		target=type;
 		super.inputKey = key.clone();
 		if (type.equals("door")) {
 			for (int i = 0; i < 5; i++) {
@@ -54,13 +70,13 @@ public class Navigate extends SubTask {
 		if (model.playerDamaged) {
 			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 1;
 		}
-		if (model.gameOver && model.getPlayer().getHealth()<=0){
-			currentPseudoReward -= 10 * Math.pow(discountfactor, time-this.lastActionTime) * 1;
+		if (model.gameOver && model.getPlayer().getHealth() <= 0) {
+			currentPseudoReward -= 10 * Math.pow(discountfactor, time - this.lastActionTime) ;
 		}
-		
-		if (((int) model.getPlayer().getX()) == targetX && ((int) model.getPlayer().getY()) == targetY
-				|| (model.gameOver && model.getPlayer().getHealth() > 0)) {
+
+		if (done) {
 			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * 10;
+			done=false;
 			return true;
 		}
 
@@ -69,12 +85,56 @@ public class Navigate extends SubTask {
 		// System.out.println("NAVIGATE:"+targetX+" "+targetY+"
 		// "+model.getPlayer().getX()+" "+model.getPlayer().getY()+"
 		// "+distance);
-		currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * (previousDistance - distance);
-		// System.out.println("Pseudoreward: "+this.currentPseudoReward);
+
+//		if (previousDistance > distance) {
+//			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * 0.5;
+//		} else if (previousDistance < distance) {
+//			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 0.5;
+//		}
 		previousDistance = distance;
 		// currentReward += Math.pow(discountfactor, time - this.startTime) *
 		// -.5;
 		return false;
 	}
 
+	public void save(String fileName, int t, int e) throws IOException {
+		File dir = new File("AIs");
+		File subDir = new File(dir, t + fileName + e);
+		subDir.mkdirs();
+
+		File f = new File(subDir, "navigate");
+		System.out.println("Saved AI to file: " + f.getPath());
+		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
+		oos.writeObject(this.net);
+		oos.flush();
+		oos.close();
+
+	}
+
+	private Object readFromFile(String file) throws FileNotFoundException, IOException, ClassNotFoundException {
+		File dir = new File("AIs");
+		File subFolder = new File(dir, file);
+		subFolder.mkdirs();
+		File f = new File(subFolder, "navigate");
+
+		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f.getAbsoluteFile()));
+		Object o = ois.readObject();
+		ois.close();
+		return o;
+	}
+
+	public void load(String fileName) {
+		try {
+			this.net = (NeuralNetwork) readFromFile(fileName);
+		} catch (ClassNotFoundException | IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	public void reachedTarget() {
+		done=true;
+		
+	}
 }

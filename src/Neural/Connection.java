@@ -1,6 +1,13 @@
 package Neural;
-public class Connection {
-    double weight = 0;
+
+import java.io.Serializable;
+
+public class Connection implements Serializable {
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 7213016728390357735L;
+	double weight = 0;
     double prevDeltaWeight = 0; // for momentum
     double deltaWeight = 0;
  

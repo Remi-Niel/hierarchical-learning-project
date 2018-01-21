@@ -1,10 +1,14 @@
 package maxQQ;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Stack;
 
 import AI.AI;
+import AI.HierarchicalAI;
 import Assets.Enemy;
 import Assets.Player;
 import Main.Map;
@@ -18,12 +22,16 @@ import mapTiles.Spawner;
 import mapTiles.Tile;
 import maxQQ.tasks.*;
 
-public class MaxQQ_AI implements AI {
+public class MaxQQ_AI implements AI, Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 6127852897556354029L;
 	Stack<AbstractAction> actionStack;
 	Random r;
-	ShortestPathFinder path;
-	Model model;
+	transient ShortestPathFinder path;
+	transient Model model;
 	int inputs = 51;
 	boolean shoot;
 	double heading;
@@ -35,6 +43,7 @@ public class MaxQQ_AI implements AI {
 	GoToDoor goToDoor;
 	Navigate nav;
 	Combat combat;
+	public double score;
 
 	public MaxQQ_AI(Model m) {
 		path = new ShortestPathFinder(m.getLevelMap());
@@ -49,9 +58,8 @@ public class MaxQQ_AI implements AI {
 		for (int i = 0; i < primitives.length; i++) {
 			primitives[i] = new primitiveAction(i);
 		}
-		
-		
-		nav = new Navigate(primitives, new int[] { 30, 20, 10, 16 }, new int[] { 1, 2, 3, 4, 24, 25, 26, 27, 28, 29, 30,
+
+		nav = new Navigate(primitives, new int[] { 30, 100, 16 }, new int[] { 1, 2, 3, 4, 24, 25, 26, 27, 28, 29, 30,
 				31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50 }, m, 0);
 
 		int[] inKey = new int[34];
@@ -60,16 +68,16 @@ public class MaxQQ_AI implements AI {
 			inKey[i] = 16 + i;
 		}
 
-		combat = new Combat(primitives, new int[] { 35, 25, 15, 16 }, new int[] { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
+		combat = new Combat(primitives, new int[] { 35, 100, 16 }, new int[] { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
 				26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 }, m,
 				0);
 
 		getKey = new GetKey(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 0 }, m, 0);
 		goToDoor = new GoToDoor(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 5 }, m, 0);
 		goToExit = new GoToExit(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 10 }, m, 0);
-		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3, 20, 2 },
+		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3, 10, 2 },
 				new int[] { 0, 5, 15 }, m, 0);
-		root = new Root(new AbstractAction[] { openDoor, goToExit, combat }, new int[] { 5, 20, 3 },
+		root = new Root(new AbstractAction[] { openDoor, goToExit, combat }, new int[] { 5, 10, 3 },
 				new int[] { 0, 5, 10, 49, 50 }, m, 0);
 
 		actionStack = new Stack<AbstractAction>();
@@ -77,6 +85,20 @@ public class MaxQQ_AI implements AI {
 		root.setStartTime(0);
 		// System.out.println("Added " + actionStack.peek().getClass() + " to
 		// the stack");
+	}
+
+	public void setModel(Model m, int time) {
+		this.model = m;
+		path = new ShortestPathFinder(m.getLevelMap());
+
+		root.setModel(m, time);
+		openDoor.setModel(m, time);
+		goToExit.setModel(m, time);
+		goToDoor.setModel(m, time);
+		getKey.setModel(m, time);
+		combat.setModel(m, time);
+		nav.setModel(m, time);
+
 	}
 
 	@Override
@@ -108,11 +130,11 @@ public class MaxQQ_AI implements AI {
 		// System.out.println("Action: " + action);
 		shoot = action >= 8;
 		heading = (action % 8) * Math.PI / 4;
-		//System.out.println(shoot+"  "+heading);
+		// System.out.println(shoot+" "+heading);
 
 	}
 
-	public void checkTerminate(int time) {
+	public void checkTerminate(int time, boolean learn) {
 		int i = 0;
 		int l = Integer.MAX_VALUE;
 		// Determine highest hierarchical task that is finished
@@ -124,7 +146,7 @@ public class MaxQQ_AI implements AI {
 			}
 			i++;
 		}
-		((SubTask) actionStack.peek()).reward(new ArrayList<double[]>(), determineInput(), 0, false, time);
+		((SubTask) actionStack.peek()).reward(new ArrayList<double[]>(), determineInput(), -0.1, false, time, learn);
 
 		l = actionStack.size() - l - 1;
 		// Terminate all subtasks below the highest finished task and the
@@ -132,12 +154,13 @@ public class MaxQQ_AI implements AI {
 		for (i = 0; i <= l; i++) {
 			SubTask s = ((SubTask) actionStack.pop());
 			// System.out.println("Popped " + s.getClass() + " from the stack");
-			if (i == 0) {
-				s.reward(new ArrayList<double[]>(), this.determineInput(), 0, true, time);
-			}
+			// if (i == 0) {
+			// s.reward(new ArrayList<double[]>(), this.determineInput(), -0.1,
+			// true, time, learn);
+			// }
 			if (!actionStack.isEmpty()) {
 				SubTask t = ((SubTask) actionStack.peek());
-				t.reward(s.getInHist(), this.determineInput(), s.getRewardSum(), i < l, time);
+				t.reward(s.getInHist(), this.determineInput(), s.getRewardSum(), i < l, time, learn);
 			}
 			s.finish();
 		}
@@ -208,8 +231,8 @@ public class MaxQQ_AI implements AI {
 				if (input[i] > max)
 					max = input[i];
 			}
-			if(min==max){
-				min=0;
+			if (min == max) {
+				min = 0;
 			}
 			for (int i = 1; i < 5; i++) {
 				input[i] = 1 - ((input[i] - min) / (max - min));
@@ -233,8 +256,8 @@ public class MaxQQ_AI implements AI {
 				if (input[i] > max)
 					max = input[i];
 			}
-			if(min==max){
-				min=0;
+			if (min == max) {
+				min = 0;
 			}
 			for (int i = 6; i < 10; i++) {
 				input[i] = 1 - ((input[i] - min) / (max - min));
@@ -258,8 +281,8 @@ public class MaxQQ_AI implements AI {
 				if (input[i] > max)
 					max = input[i];
 			}
-			if(min==max){
-				min=0;
+			if (min == max) {
+				min = 0;
 			}
 			for (int i = 11; i < 15; i++) {
 				input[i] = 1 - ((input[i] - min) / (max - min));
@@ -318,7 +341,7 @@ public class MaxQQ_AI implements AI {
 
 		Player p = model.getPlayer();
 		double minDist = Double.MAX_VALUE;
-		boolean spawner=false;
+		boolean spawner = false;
 		for (Tile ts[] : model.getLevelMap().getTileMap()) {
 			for (Tile t : ts) {
 
@@ -343,16 +366,17 @@ public class MaxQQ_AI implements AI {
 				if (relativeHeading < Math.PI / 2 && t.getSolid() && distance < 1.5) {
 					if (model.distance(t.getX(), p.getX(), t.getY(), p.getY()) < minDist) {
 						minDist = model.distance(t.getX(), p.getX(), t.getY(), p.getY());
-						if(t instanceof Spawner){
-							spawner=true;
-						}else{
-							spawner=false;
+						if (t instanceof Spawner) {
+							spawner = true;
+						} else {
+							spawner = false;
 						}
 					}
 				}
 			}
 		}
-		if(spawner)count++;
+		if (spawner)
+			count++;
 		for (Enemy e : model.getEnemyList()) {
 			double x = e.getX();
 			double y = e.getY();
@@ -399,24 +423,33 @@ public class MaxQQ_AI implements AI {
 		while (actionStack.size() > 0) {
 			SubTask s = ((SubTask) actionStack.pop());
 			if (flag) {
-				s.reward(new ArrayList<double[]>(), this.determineInput(), 0, true, time);
+				s.reward(new ArrayList<double[]>(), this.determineInput(), 0, true, time, train);
 				flag = false;
 			}
 			if (actionStack.size() > 0) {
 				SubTask t = ((SubTask) actionStack.peek());
-				t.reward(s.getInHist(), this.determineInput(), s.getRewardSum(), true, time);
+				t.reward(s.getInHist(), this.determineInput(), s.getRewardSum(), true, time, train);
 			}
 			// if (s instanceof Root) {
 			// System.out.println("Total reward: " + s.getRewardSum());
 			// }
+
+			if (s instanceof Root) {
+				if (!model.gameOver && !model.win)
+					System.out.println("Draw, epsilon= " + s.epsilon + ", temp= " + s.temp);
+				this.score = root.rewardSum;
+			}
+
 			s.finish();
 		}
+
 		root.updateDiscount();
 		openDoor.updateDiscount();
 		getKey.updateDiscount();
 		goToDoor.updateDiscount();
 		goToExit.updateDiscount();
 		nav.updateDiscount();
+		combat.updateDiscount();
 
 		actionStack.push(root);
 
@@ -428,14 +461,57 @@ public class MaxQQ_AI implements AI {
 
 	public void reachedDoor() {
 		goToDoor.reachedDoor();
+		if(nav.target=="door"){
+			nav.reachedTarget();
+		}
 	}
 
 	public void gotKey() {
 		getKey.gotKey();
+		if(nav.target=="key"){
+			nav.reachedTarget();
+		}
 	}
 
 	public void reachedExit() {
 		goToExit.reachedExit();
+		if(nav.target=="exit"){
+			nav.reachedTarget();
+		}
+	}
+
+	@Override
+	public double getScore() {
+		// TODO Auto-generated method stub
+		return this.score;
+	}
+
+	@Override
+	public void save(String fileName, int t, int e) {
+		try {
+			root.save(fileName, t, e);
+			goToExit.save(fileName, t, e);
+			goToDoor.save(fileName, t, e);
+			getKey.save(fileName, t, e);
+			nav.save(fileName, t, e);
+			combat.save(fileName, t, e);
+			openDoor.save(fileName, t, e);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+
+	}
+
+	public void load(String fileName) {
+		root.load(fileName);
+		goToExit.load(fileName);
+		this.goToDoor.load(fileName);
+		this.getKey.load(fileName);
+		this.nav.load(fileName);
+		this.combat.load(fileName);
+		this.openDoor.load(fileName);
+
 	}
 
 }

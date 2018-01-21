@@ -1,24 +1,32 @@
 package Neural;
+
+import java.io.Serializable;
 import java.text.*;
 import java.util.*;
 
-public class NeuralNetwork {
+public class NeuralNetwork implements Serializable {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 2273583349766512604L;
+
 	static {
 		Locale.setDefault(Locale.ENGLISH);
 	}
-
+	public double squaredError=0;
+	
 	final boolean isTrained = false;
 	final DecimalFormat df;
 	final Random rand = new Random(System.currentTimeMillis());
 	ArrayList<ArrayList<Neuron>> network = new ArrayList<ArrayList<Neuron>>(3);
 	final Neuron bias = new Neuron();
 	final int[] layers;
-	final int randomWeightMultiplier = 1;
+	final double randomWeightMultiplier = 2;
 
 	final double epsilon = 0.00000000001;
 
-	final double learningRate = 0.0001f;
-	final double momentum = 0.0125f;
+	final double learningRate = 0.000001f;
+	final double momentum = 0.01f;
 
 	// Inputs for xor problem
 	final double inputs[][] = { { 1, 1 }, { 1, 0 }, { 0, 1 }, { 0, 0 } };
@@ -79,7 +87,7 @@ public class NeuralNetwork {
 
 	// random
 	double getRandom() {
-		return randomWeightMultiplier * (rand.nextDouble() * 2 - 1); // [-1;1[
+		return randomWeightMultiplier * (rand.nextDouble() * 2 - 1); // [-1;1]
 	}
 
 	/**
@@ -106,21 +114,23 @@ public class NeuralNetwork {
 	 * operation
 	 */
 	public void activate() {
-
-		for (ArrayList<Neuron> layer : network.subList(1, network.size())) {
-			for (Neuron n : layer) {
-				n.calculateOutput();
+		for (int i = 1; i < network.size(); i++) {
+			for (Neuron n : network.get(i)) {
+				n.calculateOutput(i!=network.size()-1);
 			}
+			//System.out.println("\n");
 		}
+
+		//System.out.println("\n");
 	}
-	
-	public double[] forwardProp(double[] input){
+
+	public double[] forwardProp(double[] input) {
 		this.setInput(input);
 		this.activate();
 		return this.getOutput();
 	}
-	
-	public void backProp(double[] input,double[] expectedOutput){
+
+	public void backProp(double[] input, double[] expectedOutput) {
 		this.setInput(input);
 		this.applyBackpropagation(expectedOutput);
 	}
@@ -135,7 +145,6 @@ public class NeuralNetwork {
 	 */
 	public void applyBackpropagation(double expectedOutput[]) {
 
-		
 		double[][] error = new double[layers.length][];
 		for (int i = 0; i < layers.length; i++) {
 			error[i] = new double[layers[i]];
@@ -144,17 +153,18 @@ public class NeuralNetwork {
 			error[layers.length - 1][i] = expectedOutput[i];
 		}
 
-
 		int i = 0;
+		squaredError=0;
+		//update weights for output layer
 		for (Neuron n : network.get(network.size() - 1)) {
 			ArrayList<Connection> connections = n.getAllInConnections();
 			for (Connection con : connections) {
 				double ak = n.getOutput();
 				double ai = con.leftNeuron.getOutput();
 				double desiredOutput = expectedOutput[i];
-
-				double partialDerivative = -ak * (1 - ak) * ai * (desiredOutput - ak);
-				double deltaWeight = -learningRate * partialDerivative;
+				squaredError+=(desiredOutput-ak)*(desiredOutput-ak);
+				double partialDerivative = (desiredOutput - ak);
+				double deltaWeight = -learningRate * ai * partialDerivative;
 				double newWeight = con.getWeight() + deltaWeight;
 				con.setDeltaWeight(deltaWeight);
 				con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
@@ -226,8 +236,8 @@ public class NeuralNetwork {
 		if (i == maxSteps) {
 			System.out.println("!Error training try again");
 		} else {
-			//printAllWeights();
-			//printWeightUpdate();
+			// printAllWeights();
+			// printWeightUpdate();
 		}
 	}
 

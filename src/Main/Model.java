@@ -28,10 +28,13 @@ public class Model {
 	Queue<State> history;
 	String map;
 	AI ai;
-	final int timeLimit = 100000;
+	final int timeLimit = 10000;
 	public boolean enemyDied;
 	public boolean enemyDamaged;
 	public boolean playerDamaged;
+	
+	public int score=0;
+	public boolean win=false;;
 
 	public Model(String fileName) {
 		map = fileName;
@@ -141,9 +144,9 @@ public class Model {
 	public void updatePlayer(int time) {
 		player.tick();
 		movePlayer();
-		if (time >= timeLimit) {
-			player.damage(100000);
+		if (time >= timeLimit-1) {
 			this.gameOver = true;
+			this.win=false;
 		}
 	}
 
@@ -244,6 +247,7 @@ public class Model {
 						((MaxQQ_AI) ai).reachedDoor();
 					}
 					if (player.useKey()) {
+						score++;
 						if (ai instanceof HierarchicalAI)
 							current.openedDoor();
 						if (ai instanceof MaxQQ_AI) {
@@ -259,6 +263,7 @@ public class Model {
 				}
 			}
 			if (t[i] instanceof Key) {
+				score++;
 				if (ai instanceof HierarchicalAI)
 					current.gotKey();
 				if (ai instanceof MaxQQ_AI) {
@@ -275,9 +280,11 @@ public class Model {
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
 			if (t[i] instanceof Exit) {
+				score+=100;
 				if (ai instanceof HierarchicalAI)
 					current.win();
 				gameOver = true;
+				win=true;
 				if (ai instanceof MaxQQ_AI) {
 					((MaxQQ_AI) ai).reachedExit();
 				}
@@ -289,6 +296,8 @@ public class Model {
 	}
 
 	public void movePlayer() {
+
+		//teteSystem.out.println(ai.toString());
 		if (ai.getHeading() < 0 || (ai.shoot() && player.loaded()))
 			return;
 
@@ -371,7 +380,7 @@ public class Model {
 			if (closest != null) {
 
 				if (closest.damage()) {
-
+					
 					levelMap.destroyTile(closest.getX(), closest.getY());
 					enemyDied=true;
 				}else{
@@ -404,6 +413,8 @@ public class Model {
 					continue;
 				}
 			}
+			if(enemyDied)score+=2;
+			
 			if (destroyed)
 				updateHistoryBullet(bulletTime, hit);
 			b = null;
@@ -439,6 +450,7 @@ public class Model {
 	}
 
 	public void reset() {
+		score=0;
 		gameOver = false;
 		enemyList.clear();
 		b = null;

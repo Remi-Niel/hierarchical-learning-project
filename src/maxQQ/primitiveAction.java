@@ -1,9 +1,15 @@
 package maxQQ;
 
+import java.io.Serializable;
+
 import Main.Model;
 
-public class primitiveAction implements AbstractAction {
+public class primitiveAction implements AbstractAction,Serializable {
 	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	int action;
 	
 	public primitiveAction(int a){

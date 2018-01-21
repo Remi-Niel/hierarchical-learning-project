@@ -2,22 +2,27 @@ package Main;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.io.IOException;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 public class Main {
 	final static double frameLim=10000;
+	final static int gameLim=3000;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		String fileName = JOptionPane.showInputDialog("Input neural network id to store network to.");
+		
 		JFrame frame = new JFrame("Game");
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		JLabel emptyLabel = new JLabel("");
 		frame.getContentPane().add(emptyLabel, BorderLayout.CENTER);
 
-		Model model = new Model("map1");
+		Model model = new Model("map");
 		View view = new View(model);
-		Controller c = new Controller(view, frame, model);
+		Controller c = new Controller(view, frame, model,fileName);
 		frame.add(view);
 		view.setPreferredSize(new Dimension(1080,1080));
 		frame.pack();
@@ -26,42 +31,48 @@ public class Main {
 		int i = 0;
 		int wins = 0;
 		int games = 0;
+		int f=0;
 		Long lastFrame = System.currentTimeMillis();
 		while (true) {
-			//if(i%100==0)System.out.println(i);
-			if (c.gameover()) {
-				if (c.m.player.getHealth() > 0) {
-					wins++;
-				}
-				games++;
-				c.reset(true, i);
-
-				System.out.println("Wins: " + wins + ", losses: " + (games - wins) + ", frames: " + i);
-
-				i = 0;
-				continue;
-			} else if (i > frameLim) {
-				games++;
-				c.reset(true, i);
-				System.out.println("Wins: " + wins + ", losses: " + (games - wins) + ", frames: " + i);
-				i = 0;
-				continue;
+			
+			if(games>gameLim){
+				model.reset();
+				c=new Controller(view,frame,model,fileName);
+				f=0;
+				games=0;
+				i++;
 			}
-
-			lastFrame = System.currentTimeMillis();
-			// System.out.println(++i);
-			c.update(i,(games % 1000 == 0));
-
-			if (games > 0 && (games % 100 == 0)) {
-//			if (true) {
+			
+			if(games%100==0 && f==0){
+				System.out.println("Network: "+i+", Game: "+games);
 				try {
-					Thread.sleep(Math.max(0, 100 - (System.currentTimeMillis() - lastFrame)));
+					c.storeAI(i,games);
+				} catch (IOException e){ 
+					e.printStackTrace();
+				}
+			}
+			
+			
+			c.update(f, true,games%10==0);
+			
+		
+			
+			
+			f++;
+		
+			if(c.gameover()){
+				System.out.println("Frames: "+f);
+				games++;
+				f=0;
+				try {
+					Thread.sleep(100);
 				} catch (InterruptedException e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				c.reset(true, i);
 			}
-			i++;
+			
 		}
 
 	}
