@@ -59,8 +59,8 @@ public class MaxQQ_AI implements AI, Serializable {
 			primitives[i] = new primitiveAction(i);
 		}
 
-		nav = new Navigate(primitives, new int[] { 30, 100, 16 }, new int[] { 1, 2, 3, 4, 24, 25, 26, 27, 28, 29, 30,
-				31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50 }, m, 0);
+		nav = new Navigate(primitives, new int[] { 30, 150, 90, 16 }, new int[] { 1, 2, 3, 4, 24, 25, 26, 27, 28, 29,
+				30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50 }, m, 0);
 
 		int[] inKey = new int[34];
 
@@ -75,9 +75,9 @@ public class MaxQQ_AI implements AI, Serializable {
 		getKey = new GetKey(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 0 }, m, 0);
 		goToDoor = new GoToDoor(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 5 }, m, 0);
 		goToExit = new GoToExit(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 10 }, m, 0);
-		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3, 10, 2 },
+		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3, 50, 2 },
 				new int[] { 0, 5, 15 }, m, 0);
-		root = new Root(new AbstractAction[] { openDoor, goToExit, combat }, new int[] { 5, 10, 3 },
+		root = new Root(new AbstractAction[] { openDoor, goToExit, combat }, new int[] { 5, 50, 3 },
 				new int[] { 0, 5, 10, 49, 50 }, m, 0);
 
 		actionStack = new Stack<AbstractAction>();
@@ -146,7 +146,8 @@ public class MaxQQ_AI implements AI, Serializable {
 			}
 			i++;
 		}
-		((SubTask) actionStack.peek()).reward(new ArrayList<double[]>(), determineInput(), -0.1, false, time, learn);
+		((SubTask) actionStack.peek()).reward(new ArrayList<double[]>(), determineInput(), -0.1, l < 100000, time,
+				learn);
 
 		l = actionStack.size() - l - 1;
 		// Terminate all subtasks below the highest finished task and the
@@ -226,6 +227,8 @@ public class MaxQQ_AI implements AI, Serializable {
 
 			double min = input[1], max = input[1];
 			for (int i = 2; i < 5; i++) {
+				if (input[i] == -1)
+					continue;
 				if (input[i] < min)
 					min = input[i];
 				if (input[i] > max)
@@ -235,6 +238,10 @@ public class MaxQQ_AI implements AI, Serializable {
 				min = 0;
 			}
 			for (int i = 1; i < 5; i++) {
+				if (input[i] == -1) {
+					input[i] = 0;
+					continue;
+				}
 				input[i] = 1 - ((input[i] - min) / (max - min));
 			}
 		}
@@ -251,6 +258,8 @@ public class MaxQQ_AI implements AI, Serializable {
 			input[9] = path.findPath(p.getX(), p.getY() - 1, nearestDoor.getX(), nearestDoor.getY(), .95).distance;
 			double min = input[5], max = input[5];
 			for (int i = 6; i < 10; i++) {
+				if (input[i] == -1)
+					continue;
 				if (input[i] < min)
 					min = input[i];
 				if (input[i] > max)
@@ -260,6 +269,10 @@ public class MaxQQ_AI implements AI, Serializable {
 				min = 0;
 			}
 			for (int i = 6; i < 10; i++) {
+				if (input[i] == -1) {
+					input[i] = 0;
+					continue;
+				}
 				input[i] = 1 - ((input[i] - min) / (max - min));
 			}
 		}
@@ -276,6 +289,8 @@ public class MaxQQ_AI implements AI, Serializable {
 			input[14] = path.findPath(p.getX(), p.getY() - 1, nearestExit.getX(), nearestExit.getY(), .95).distance;
 			double min = input[11], max = input[11];
 			for (int i = 12; i < 15; i++) {
+				if (input[i] == -1)
+					continue;
 				if (input[i] < min)
 					min = input[i];
 				if (input[i] > max)
@@ -285,6 +300,10 @@ public class MaxQQ_AI implements AI, Serializable {
 				min = 0;
 			}
 			for (int i = 11; i < 15; i++) {
+				if (input[i] == -1) {
+					input[i] = 0;
+					continue;
+				}
 				input[i] = 1 - ((input[i] - min) / (max - min));
 			}
 		}
@@ -305,6 +324,8 @@ public class MaxQQ_AI implements AI, Serializable {
 				} else {
 					input[i] = 1;
 				}
+			}else{
+				input[i]=0;
 			}
 		}
 
@@ -435,8 +456,6 @@ public class MaxQQ_AI implements AI, Serializable {
 			// }
 
 			if (s instanceof Root) {
-				if (!model.gameOver && !model.win)
-					System.out.println("Draw, epsilon= " + s.epsilon + ", temp= " + s.temp);
 				this.score = root.rewardSum;
 			}
 
@@ -459,23 +478,23 @@ public class MaxQQ_AI implements AI, Serializable {
 		openDoor.setOpenedDoor(true);
 	}
 
-	public void reachedDoor() {
-		goToDoor.reachedDoor();
-		if(nav.target=="door"){
+	public void reachedDoor(boolean opened) {
+		goToDoor.reachedDoor(opened);
+		if (nav.target == "door") {
 			nav.reachedTarget();
 		}
 	}
 
 	public void gotKey() {
 		getKey.gotKey();
-		if(nav.target=="key"){
+		if (nav.target == "key") {
 			nav.reachedTarget();
 		}
 	}
 
 	public void reachedExit() {
 		goToExit.reachedExit();
-		if(nav.target=="exit"){
+		if (nav.target == "exit") {
 			nav.reachedTarget();
 		}
 	}
@@ -512,6 +531,10 @@ public class MaxQQ_AI implements AI, Serializable {
 		this.combat.load(fileName);
 		this.openDoor.load(fileName);
 
+	}
+
+	public void walkedIntoWall(int t) {
+		nav.walkedIntoWall(t);
 	}
 
 }

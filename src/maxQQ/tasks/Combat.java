@@ -22,7 +22,7 @@ public class Combat extends SubTask {
 	@Override
 	public boolean finished(double[] input, Model model, int time) {
 		if (model.enemyDied) {
-			this.currentReward += Math.pow(discountfactor, time - this.lastActionTime) * 2;
+			this.currentReward += Math.pow(discountfactor, time - this.lastActionTime) * 1;
 			return true;
 		}
 		boolean flag = true;
@@ -33,16 +33,8 @@ public class Combat extends SubTask {
 			}
 		}
 		if (flag) {
-			this.currentReward -= Math.pow(discountfactor, time - this.lastActionTime) * 1;
+			this.currentReward -= Math.pow(discountfactor, time - this.lastActionTime) * 10;
 			return true;
-		}
-
-		if (model.enemyDamaged) {
-			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime);
-		}
-		if (model.playerDamaged) {
-
-			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime);
 		}
 
 		return false;

@@ -32,9 +32,9 @@ public class Model {
 	public boolean enemyDied;
 	public boolean enemyDamaged;
 	public boolean playerDamaged;
-	
-	public int score=0;
-	public boolean win=false;;
+
+	public int score = 0;
+	public boolean win = false;;
 
 	public Model(String fileName) {
 		map = fileName;
@@ -44,14 +44,14 @@ public class Model {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-		//System.out.println(enemyList.size());
+		// System.out.println(enemyList.size());
 		p = new ShortestPathFinder(levelMap);
 		mapSize = (double) levelMap.getSize();
 		enemyMap = new boolean[levelMap.getSize()][levelMap.getSize()];
 		player = new Player((levelMap.getSpawnX() + 0.5), (levelMap.getSpawnY() + 0.5));
 		enemyDied = false;
-		enemyDamaged=false;
-		playerDamaged=false;
+		enemyDamaged = false;
+		playerDamaged = false;
 	}
 
 	public void setHistory(Queue<State> history) {
@@ -143,10 +143,10 @@ public class Model {
 
 	public void updatePlayer(int time) {
 		player.tick();
-		movePlayer();
-		if (time >= timeLimit-1) {
+		movePlayer(time);
+		if (time >= timeLimit - 1) {
 			this.gameOver = true;
-			this.win=false;
+			this.win = false;
 		}
 	}
 
@@ -156,15 +156,15 @@ public class Model {
 		for (Enemy e : enemyList) {
 			enemyMap[(int) e.getX()][(int) e.getY()] = true;
 		}
-		
-		for(Tile[] ts:levelMap.getTileMap()){
-			for(Tile t:ts){
-				if(t instanceof Spawner){
-					enemyMap[t.getX()][t.getY()]=true;
+
+		for (Tile[] ts : levelMap.getTileMap()) {
+			for (Tile t : ts) {
+				if (t instanceof Spawner) {
+					enemyMap[t.getX()][t.getY()] = true;
 				}
 			}
 		}
-		
+
 	}
 
 	public void moveEnemies() {
@@ -185,7 +185,7 @@ public class Model {
 			double heading = e.getHeading();
 			if (heading == -1) {
 				if (r.distance > 0) {
-					//System.out.println(r.direction);
+					// System.out.println(r.direction);
 					heading = Math.PI / 2 - r.direction * Math.PI / 4;
 					if (heading < 0) {
 						heading += 2 * Math.PI;
@@ -208,7 +208,7 @@ public class Model {
 			e.move(e.getX() + dx, e.getY() + dy);
 
 			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter) {
-				this.playerDamaged=true;
+				this.playerDamaged = true;
 				gameOver = gameOver || player.damage(e.getHealth());
 				if (e instanceof Ghost) {
 					((Ghost) e).getParent().decrementCount();
@@ -228,12 +228,12 @@ public class Model {
 
 	public boolean collides(double x, double y) {
 
-		Tile t[] = new Tile[4];
+		Tile t[] = new Tile[5];
 
-		t[0] = levelMap.getTile((int) (x + 0.5), (int) (y - 0.5));
-		t[1] = levelMap.getTile((int) (x + 0.5), (int) (y + 0.5));
-		t[2] = levelMap.getTile((int) (x - 0.5), (int) (y - 0.5));
-		t[3] = levelMap.getTile((int) (x - 0.5), (int) (y + 0.5));
+		t[0] = levelMap.getTile((int) (x + 0.4), (int) (y - 0.4));
+		t[1] = levelMap.getTile((int) (x + 0.4), (int) (y + 0.4));
+		t[2] = levelMap.getTile((int) (x - 0.4), (int) (y - 0.4));
+		t[3] = levelMap.getTile((int) (x - 0.4), (int) (y + 0.4));
 		State current = null;
 		if (ai instanceof HierarchicalAI)
 			current = ((LinkedList<State>) history).getLast();
@@ -244,7 +244,7 @@ public class Model {
 					if (ai instanceof HierarchicalAI)
 						current.reachedDoor();
 					if (ai instanceof MaxQQ_AI) {
-						((MaxQQ_AI) ai).reachedDoor();
+						((MaxQQ_AI) ai).reachedDoor(player.getKeys()>0);
 					}
 					if (player.useKey()) {
 						score++;
@@ -262,6 +262,18 @@ public class Model {
 					return true;
 				}
 			}
+			
+			
+
+		}
+
+
+		t[0] = levelMap.getTile((int) (x + 0.6), (int) (y - 0.6));
+		t[1] = levelMap.getTile((int) (x + 0.6), (int) (y + 0.6));
+		t[2] = levelMap.getTile((int) (x - 0.6), (int) (y - 0.6));
+		t[3] = levelMap.getTile((int) (x - 0.6), (int) (y + 0.6));
+		t[4] = levelMap.getTile((int) (x), (int) (y));
+		for (int i = 0; i < 5; i++) {
 			if (t[i] instanceof Key) {
 				score++;
 				if (ai instanceof HierarchicalAI)
@@ -275,29 +287,29 @@ public class Model {
 			if (t[i] instanceof Health) {
 				if (ai instanceof HierarchicalAI)
 					current.health();
-				this.playerDamaged=true;
+				this.playerDamaged = true;
 				player.damage(-((Health) t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
 			if (t[i] instanceof Exit) {
-				score+=100;
+				score += 100;
 				if (ai instanceof HierarchicalAI)
 					current.win();
 				gameOver = true;
-				win=true;
+				win = true;
 				if (ai instanceof MaxQQ_AI) {
 					((MaxQQ_AI) ai).reachedExit();
 				}
 			}
 
 		}
-
+		
 		return false;
 	}
 
-	public void movePlayer() {
+	public void movePlayer(int t) {
 
-		//teteSystem.out.println(ai.toString());
+		// teteSystem.out.println(ai.toString());
 		if (ai.getHeading() < 0 || (ai.shoot() && player.loaded()))
 			return;
 
@@ -311,6 +323,20 @@ public class Model {
 
 		if (!collides(x, y)) {
 			player.move(x, y);
+		} else {
+			if(ai instanceof MaxQQ_AI){
+				((MaxQQ_AI)ai).walkedIntoWall(t);
+			}
+			x -= dx;
+			if (!collides(x, y)) {
+				player.move(x, y);
+			}else{
+				x+=dx;
+				y-=dy;
+				if (!collides(x, y)) {
+					player.move(x, y);
+				}
+			}
 		}
 
 	}
@@ -380,11 +406,11 @@ public class Model {
 			if (closest != null) {
 
 				if (closest.damage()) {
-					
+
 					levelMap.destroyTile(closest.getX(), closest.getY());
-					enemyDied=true;
-				}else{
-					enemyDamaged=true;
+					enemyDied = true;
+				} else {
+					enemyDamaged = true;
 				}
 				hit = true;
 			}
@@ -403,7 +429,7 @@ public class Model {
 
 				if (relativeHeading < Math.PI / 2 && Math.abs(bulletDistance(e.getX(), e.getY())) < 1.5) {
 					// System.out.println("Hit!");
-					enemyDamaged=true;
+					enemyDamaged = true;
 					if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < minDist && e.hit()) {
 						enemyList.remove(e);
 						enemyDied = true;
@@ -413,14 +439,15 @@ public class Model {
 					continue;
 				}
 			}
-			if(enemyDied)score+=2;
-			
+			if (enemyDied)
+				score += 2;
+
 			if (destroyed)
 				updateHistoryBullet(bulletTime, hit);
 			b = null;
 		}
 		if (ai.shoot() && ai.getHeading() != -1 && player.shoot()) {
-			//System.out.println("Shoot!!!");
+			// System.out.println("Shoot!!!");
 			b = new Bullet(mapSize, player.getX(), player.getY(), ai.getHeading(), time);
 		}
 	}
@@ -450,7 +477,7 @@ public class Model {
 	}
 
 	public void reset() {
-		score=0;
+		score = 0;
 		gameOver = false;
 		enemyList.clear();
 		b = null;

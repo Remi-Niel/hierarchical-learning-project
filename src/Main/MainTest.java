@@ -12,9 +12,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 public class MainTest {
-	final static double frameLim = 10000;
-	final static int gameLim = 10000;
-	final static int epochs = 100;
+	final static double frameLim = 5000;
+	final static int gameLim = 1000000;
+	final static int epochs = 1;
 
 	public static void main(String[] args) throws FileNotFoundException {
 		// TODO Auto-generated method stub
@@ -22,7 +22,7 @@ public class MainTest {
 		int i = 0;
 		int wins = 0;
 		int games = 0;
-		int inc = 100;
+		int inc = 10000;
 		int f = 0;
 
 		String fileName = JOptionPane.showInputDialog("Input neural network id to load network from.");
@@ -53,7 +53,7 @@ public class MainTest {
 				System.out.println("games: " + games);
 				for (int e = 0; e < epochs; e++) {
 					while (!c.gameover() && f < frameLim) {
-						c.update(f, false, false);
+						c.update(f, false, true);
 
 						f++;
 					}

@@ -78,9 +78,8 @@ public class GoToExit extends SubTask {
 			reachedExit = false;
 			return true;
 		} else if (input[10] == -1) { // No reachable exit
-			// System.out.println("Terminating "+this.getClass()+" no exit
-			// reachable " +input[10]);
-			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
+			System.out.println("Terminating " + this.getClass() + " no exit reachable " + input[10]);
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -10;
 			return true;
 		}
 		return false;
@@ -90,44 +89,41 @@ public class GoToExit extends SubTask {
 		// TODO Auto-generated method stub
 		reachedExit = true;
 	}
-	
+
 	public void save(String fileName, int t, int e) throws IOException {
-		File dir=new File("AIs");
-		File subDir=new File(dir,t+fileName+e);
+		File dir = new File("AIs");
+		File subDir = new File(dir, t + fileName + e);
 		subDir.mkdirs();
-		
-		File f=new File(subDir,"gotoExit");
-		System.out.println("Saved AI to file: "+f.getPath());
-		ObjectOutputStream oos=new ObjectOutputStream(new FileOutputStream(f));
+
+		File f = new File(subDir, "gotoExit");
+		System.out.println("Saved AI to file: " + f.getPath());
+		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
 		oos.writeObject(this.net);
 		oos.flush();
 		oos.close();
-		
-	}
-	
 
-	private Object readFromFile(String file)
-			throws FileNotFoundException, IOException, ClassNotFoundException {
-		File dir=new File("AIs");
+	}
+
+	private Object readFromFile(String file) throws FileNotFoundException, IOException, ClassNotFoundException {
+		File dir = new File("AIs");
 		File subFolder = new File(dir, file);
 		subFolder.mkdirs();
-		File f= new File(subFolder,"gotoExit");
-		
+		File f = new File(subFolder, "gotoExit");
+
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f.getAbsoluteFile()));
 		Object o = ois.readObject();
 		ois.close();
 		return o;
 	}
 
-
 	public void load(String fileName) {
 		try {
-			this.net=(NeuralNetwork) readFromFile(fileName);
+			this.net = (NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+
 	}
 
 }

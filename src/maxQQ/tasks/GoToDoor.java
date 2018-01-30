@@ -21,13 +21,14 @@ import maxQQ.SubTask;
 
 public class GoToDoor extends SubTask {
 
-	boolean reached;
+	boolean reached,opened;
 	transient ShortestPathFinder path;
 
 	public GoToDoor(AbstractAction[] as, int[] size, int[] inputKey, Model m, int time) {
 		super(as, size, inputKey, m, time);
 		path = new ShortestPathFinder(m.getLevelMap());
 		reached = false;
+		opened=false;
 		// TODO Auto-generated constructor stub
 	}
 
@@ -38,6 +39,8 @@ public class GoToDoor extends SubTask {
 
 	public AbstractAction getSubtask(double[] rawInput, int time, boolean b) {
 		// TODO Auto-generated method stub
+		reached = false;
+		opened=false;
 		AbstractAction sub = super.getSubtask(rawInput, time, b);
 
 		Door nearestDoor = null;
@@ -76,7 +79,10 @@ public class GoToDoor extends SubTask {
 	@Override
 	public boolean finished(double[] input, Model model, int time) {
 		if (reached) {
-			// System.out.println("Reached door");
+			if(!this.opened){
+				System.out.println("Reached door without key -1");
+				currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
+			}
 			reached = false;
 			return true;
 		} else if (input[5] == -1) { // No reachable door exists
@@ -88,9 +94,10 @@ public class GoToDoor extends SubTask {
 		return false;
 	}
 
-	public void reachedDoor() {
+	public void reachedDoor(boolean opened) {
 		// TODO Auto-generated method stub
 		reached = true;
+		this.opened=opened;
 	}
 
 	public void save(String fileName, int t, int e) throws IOException {
@@ -98,7 +105,7 @@ public class GoToDoor extends SubTask {
 		File subDir = new File(dir, t + fileName + e);
 		subDir.mkdirs();
 
-		File f = new File(subDir, "gotoExit");
+		File f = new File(subDir, "gotoDoor");
 		System.out.println("Saved AI to file: " + f.getPath());
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(f));
 		oos.writeObject(this.net);
@@ -111,7 +118,7 @@ public class GoToDoor extends SubTask {
 		File dir = new File("AIs");
 		File subFolder = new File(dir, file);
 		subFolder.mkdirs();
-		File f = new File(subFolder, "gotoExit");
+		File f = new File(subFolder, "gotoDoor");
 
 		ObjectInputStream ois = new ObjectInputStream(new FileInputStream(f.getAbsoluteFile()));
 		Object o = ois.readObject();

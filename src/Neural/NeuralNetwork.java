@@ -21,12 +21,15 @@ public class NeuralNetwork implements Serializable {
 	ArrayList<ArrayList<Neuron>> network = new ArrayList<ArrayList<Neuron>>(3);
 	final Neuron bias = new Neuron();
 	final int[] layers;
-	final double randomWeightMultiplier = 2;
+	final double randomWeightMultiplier = 10;
 
 	final double epsilon = 0.00000000001;
 
-	final double learningRate = 0.000001f;
-	final double momentum = 0.01f;
+	public double learningRate = 0.000001f;
+	final double minLearningRate=0.00000000000000001f;
+	final double decay=0.985;
+	
+	final double momentum = 0.0f;
 
 	// Inputs for xor problem
 	final double inputs[][] = { { 1, 1 }, { 1, 0 }, { 0, 1 }, { 0, 0 } };
@@ -39,13 +42,17 @@ public class NeuralNetwork implements Serializable {
 	// for weight update all
 	final HashMap<String, Double> weightUpdate = new HashMap<String, Double>();
 
-	public static void main(String[] args) {
-		NeuralNetwork nn = new NeuralNetwork(new int[] { 2, 30, 20, 1 });
-		int maxRuns = 500000;
-		double minErrorCondition = 0.00001;
-		nn.run(maxRuns, minErrorCondition);
+//	public static void main(String[] args) {
+//		NeuralNetwork nn = new NeuralNetwork(new int[] { 2, 30, 20, 1 });
+//		int maxRuns = 500000;
+//		double minErrorCondition = 0.00001;
+//		nn.run(maxRuns, minErrorCondition);
+//	}
+	
+	public void updateLearningRate(){
+		learningRate=Math.max(minLearningRate, learningRate*decay);
 	}
-
+	
 	public NeuralNetwork(int[] size) {
 		this.layers = size;
 		df = new DecimalFormat("#.0#");
@@ -164,9 +171,9 @@ public class NeuralNetwork implements Serializable {
 				double desiredOutput = expectedOutput[i];
 				squaredError+=(desiredOutput-ak)*(desiredOutput-ak);
 				double partialDerivative = (desiredOutput - ak);
-				double deltaWeight = -learningRate * ai * partialDerivative;
-				double newWeight = con.getWeight() + deltaWeight;
-				con.setDeltaWeight(deltaWeight);
+				double deltaWeight = learningRate * ai * partialDerivative;
+				double newWeight = Math.max(Math.min(con.getWeight() + deltaWeight,10000000000.0),-10000000000.0);
+				con.setDeltaWeight(newWeight-con.getWeight());
 				con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
 			}
 			i++;
@@ -196,9 +203,9 @@ public class NeuralNetwork implements Serializable {
 					n.setError(sumKoutputs);
 
 					double partialDerivative = aj * (1 - aj) * ai * sumKoutputs;
-					double deltaWeight = -learningRate * partialDerivative;
-					double newWeight = con.getWeight() + deltaWeight;
-					con.setDeltaWeight(deltaWeight);
+					double deltaWeight = learningRate * partialDerivative;
+					double newWeight = Math.max(Math.min(con.getWeight() + deltaWeight,10000000000.0),-10000000000.0);
+					con.setDeltaWeight(newWeight-con.getWeight());
 					con.setWeight(newWeight + momentum * con.getPrevDeltaWeight());
 					k++;
 				}

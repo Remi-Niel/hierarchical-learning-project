@@ -75,7 +75,7 @@ public class ShortestPathFinder {
 
 		distanceFromTo[startX][startY][startX][startY] = 0;
 
-		if (x2 < 0 || y2 < 0 || x2 >= m.getSize() || y2 >= m.getSize()) {
+		if (x2 < 0 || y2 < 0 || x2 >= m.getSize() || y2 >= m.getSize() || m.getTile(startX,startY).getSolid()) {
 			return new ResultTuple(-1, -1);
 		}
 

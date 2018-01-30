@@ -26,12 +26,12 @@ public class OpenDoor extends SubTask {
 	public boolean finished(double[] input, Model model, int time) {
 		// Opened a door
 		if (isOpenedDoor()) {
-			System.out.println("Opened the door");
-			currentReward+=Math.pow(discountfactor, time - this.lastActionTime);
+			//System.out.println("Opened the door");
+			currentReward+=Math.pow(discountfactor, time - this.lastActionTime)*1;
 			openedDoor = false;
 			return true;
 		} else if (input[5] == -1) { // No reachable door exists
-			//System.out.println("Terminating "+this.getClass()+" no door reachable " +input[5]);
+			System.out.println("Terminating "+this.getClass()+" no door reachable " +input[5]);
 			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
 			return true;
 		}

@@ -8,15 +8,17 @@ import java.util.Random;
 import Main.Model;
 import Neural.NeuralNetwork;
 import maxQQ.tasks.Navigate;
+import maxQQ.tasks.OpenDoor;
 import maxQQ.tasks.Root;
 
 public abstract class SubTask implements AbstractAction, Serializable {
 
 	protected double discountfactor = 0.9;
-	protected double epsilon = 0.1;
-	double minTemp = 0.01;
+	protected double epsilon = 0.0;
+	double minTemp = .1;
+	double decay = .98;
 	double maxEpsilon = .99;
-	double epsilonIncrement = 0.00001;
+	double epsilonIncrement = 0.001;
 	private AbstractAction[] subTasks;
 	protected NeuralNetwork net;
 	protected transient Model model;
@@ -30,7 +32,7 @@ public abstract class SubTask implements AbstractAction, Serializable {
 	protected double currentPseudoReward;
 	protected double temp = 100;
 	ArrayList<double[]> inputHistory;
-	int windowSize = 10000;
+	int windowSize = 1000;
 	transient MovingAverage avg;
 	MovingAverage avgError;
 	Random rand;
@@ -116,13 +118,14 @@ public abstract class SubTask implements AbstractAction, Serializable {
 		}
 
 		if (b) {
+			h = rand.nextInt(out.length);
+
 			double sum = 0;
 
 			for (int i = 0; i < out.length; i++) {
 				normalized[i] = Math.exp((out[i] - max) / temp);
 				sum += normalized[i];
 			}
-
 			double r = rand.nextDouble();
 			double chanceSum = 0;
 
@@ -134,27 +137,33 @@ public abstract class SubTask implements AbstractAction, Serializable {
 					break;
 				}
 			}
+//		if (!(this instanceof Navigate))
+//			System.out.println(this.getClass() + ": " +this.subTasks[h].getClass()+", "+ Arrays.toString(out));
 		} else {
 			h = 0;
+			max = out[0];
 			for (int i = 1; i < out.length; i++) {
 				if (out[i] >= max) {
 					max = out[i];
 					h = i;
 				}
 			}
+//			System.out.println(this.getClass());
+//			System.out.println(Arrays.toString(input));
+//			System.out.println(Arrays.toString(out));
 		}
 
 		chosenAction = h;
-//		if (!(this instanceof Navigate)) {
-//			//System.out.println(Arrays.toString(out));
-//			System.out.println(this.getClass() + ", " + subTasks[chosenAction].getClass());
+//		if ((this instanceof Navigate)) {
+//			// System.out.println();
+//			System.out.println(this.getClass() + ", " + subTasks[chosenAction].getClass()+", "+Arrays.toString(out));
 //		}
 		if (h == -1) {
-			System.out.println(Arrays.toString(rawInput));
-			System.out.println(Arrays.toString(normalized));
-			System.out.println(Arrays.toString(out));
-			net.printAllWeights();
-			System.err.println("Softmax did not return value for some reason, last option is assumed");
+			// System.out.println(Arrays.toString(rawInput));
+			// System.out.println(Arrays.toString(normalized));
+			// System.out.println(Arrays.toString(out));
+			// net.printAllWeights();
+			System.err.println("Softmax did not return value for some reason, last option is assumed " + h);
 			chosenAction = out.length - 1;
 			System.exit(1);
 		}
@@ -167,11 +176,13 @@ public abstract class SubTask implements AbstractAction, Serializable {
 			boolean learn) {
 
 		// System.out.println("Rewarding: "+this.getClass());
-
 		inputHistory.addAll(inHist);
-		rewardSum += Math.pow(discountfactor, lastActionTime - startTime) * reward + currentReward;
-		double local = Math.pow(discountfactor, time - lastActionTime) * reward + currentReward + currentPseudoReward;
-		// System.out.println(this.getClass() +" reward+pseudoReward: "+local);
+		rewardSum += Math.pow(discountfactor, time - startTime) * (reward + currentReward);
+		double local = (reward + currentReward + currentPseudoReward);
+//		if ((this instanceof OpenDoor)) {
+//			System.out
+//					.println(this.getClass() + ", " + subTasks[chosenAction].getClass() + ", " + reward + ", " + local);
+//		}
 		double[] out;
 		double max = 0;
 		if (!terminate) {
@@ -184,19 +195,28 @@ public abstract class SubTask implements AbstractAction, Serializable {
 					max = nextExpected[i];
 				}
 			}
+		}else{
+//			System.out.println(this.getClass()+": terminate");
+			
 		}
-		for (double[] in : inputHistory.subList(lastActionTime - startTime, inputHistory.size())) {
+		boolean first = true;
+		int count = 0;
+		for (double[] in : inputHistory.subList(lastActionTime - startTime, lastActionTime - startTime + 1)) {
 			out = net.forwardProp(decodeInput(in));
 			out[chosenAction] = local;
 			if (!terminate) {
-				out[chosenAction] += discountfactor * max;
+				out[chosenAction] += Math.pow(discountfactor, time - lastActionTime - count) * max;
 			}
 			if (learn) {
 				net.backProp(in, out.clone());
 				avgError.next(net.squaredError);
-				//System.out.println(this.getClass()+", "+max+", "+net.squaredError);
+				// if (!(this instanceof Navigate))
+				// System.out.println(this.getClass() + ", " + time + ", " +
+				// local + ", " + max + ", "+ net.squaredError + ", " +
+				// rewardSum);
 			}
 			local = local / discountfactor;
+			count++;
 		}
 
 		if ((this instanceof Root) && terminate) {
@@ -241,14 +261,14 @@ public abstract class SubTask implements AbstractAction, Serializable {
 	}
 
 	public void updateDiscount() {
-		System.out.println(this.getClass() + " avg abs error for last " + this.windowSize + " learn steps: "
-				+ Math.sqrt(this.avgError.getAvg()));
+//		System.out.println(this.getClass() + " avg abs error for last " + this.windowSize + " learn steps: "
+//				+ Math.sqrt(this.avgError.getAvg()));
 
 		epsilon += epsilonIncrement;
 		epsilon = Math.min(epsilon, maxEpsilon);
-		temp = .95 * temp;
+		temp = decay * temp;
 		temp = Math.max(temp, minTemp);
-
+		net.updateLearningRate();
 		// System.out.println(this.getClass()+ " epsilon: "+epsilon);
 	}
 

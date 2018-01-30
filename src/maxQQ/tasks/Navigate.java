@@ -67,14 +67,15 @@ public class Navigate extends SubTask {
 		// System.out.print(input[i]+" ");
 		// }
 		// System.out.println("");
-		if (model.playerDamaged) {
-			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 1;
-		}
+//		if (model.playerDamaged) {
+//			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 1;
+//		}
 		if (model.gameOver && model.getPlayer().getHealth() <= 0) {
 			currentPseudoReward -= 10 * Math.pow(discountfactor, time - this.lastActionTime) ;
 		}
 
 		if (done) {
+//			System.out.println("Reached "+target);
 			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * 10;
 			done=false;
 			return true;
@@ -86,11 +87,11 @@ public class Navigate extends SubTask {
 		// "+model.getPlayer().getX()+" "+model.getPlayer().getY()+"
 		// "+distance);
 
-//		if (previousDistance > distance) {
-//			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * 0.5;
-//		} else if (previousDistance < distance) {
-//			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 0.5;
-//		}
+		if (previousDistance > distance) {
+			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime);
+		} else if (previousDistance < distance) {
+			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime);
+		}
 		previousDistance = distance;
 		// currentReward += Math.pow(discountfactor, time - this.startTime) *
 		// -.5;
@@ -136,5 +137,9 @@ public class Navigate extends SubTask {
 	public void reachedTarget() {
 		done=true;
 		
+	}
+
+	public void walkedIntoWall(int time) {
+		currentPseudoReward -= 0 * Math.pow(discountfactor, time - this.lastActionTime) ;
 	}
 }

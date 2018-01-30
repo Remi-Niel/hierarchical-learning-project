@@ -10,7 +10,7 @@ import javax.swing.JOptionPane;
 
 public class Main {
 	final static double frameLim=10000;
-	final static int gameLim=3000;
+	final static int gameLim=1000000;
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		String fileName = JOptionPane.showInputDialog("Input neural network id to store network to.");
@@ -43,7 +43,7 @@ public class Main {
 				i++;
 			}
 			
-			if(games%100==0 && f==0){
+			if(games%10==0 && f==0){
 				System.out.println("Network: "+i+", Game: "+games);
 				try {
 					c.storeAI(i,games);
@@ -53,7 +53,7 @@ public class Main {
 			}
 			
 			
-			c.update(f, true,games%10==0);
+			c.update(f, true,games%1==0);
 			
 		
 			
@@ -64,12 +64,6 @@ public class Main {
 				System.out.println("Frames: "+f);
 				games++;
 				f=0;
-				try {
-					Thread.sleep(100);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				c.reset(true, i);
 			}
 			

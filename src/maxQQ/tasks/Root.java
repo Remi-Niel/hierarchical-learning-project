@@ -22,12 +22,16 @@ public class Root extends SubTask {
 	@Override
 	public boolean finished(double[] input, Model model, int time) {
 		if (model.gameOver && (model.getPlayer().getHealth() > 0)) {
-			System.out.println("Win, epsilon= "+this.epsilon+", temp= "+this.temp);
-			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*100;
+			System.out.println("Win, epsilon= "+this.epsilon+", temp= "+this.temp+", rate:"+this.net.learningRate);
+			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*1000;
 			return true;
 		}else if(model.gameOver && model.win){
-			System.out.println("Loss, epsilon= "+this.epsilon+", temp= " + this.temp);
-			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*-100;
+			model.win=false;
+			System.out.println("Loss, epsilon= "+this.epsilon+", temp= " + this.temp+", rate:"+this.net.learningRate);
+			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*-1000;
+			return true;
+		}else if(model.gameOver){
+			System.out.println("Draw, epsilon= " + this.epsilon + ", temp= " + this.temp+", rate:"+this.net.learningRate);
 			return true;
 		}
 		return false;
