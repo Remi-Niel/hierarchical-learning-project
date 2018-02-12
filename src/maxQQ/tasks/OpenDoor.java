@@ -27,12 +27,12 @@ public class OpenDoor extends SubTask {
 		// Opened a door
 		if (isOpenedDoor()) {
 			//System.out.println("Opened the door");
-			currentReward+=Math.pow(discountfactor, time - this.lastActionTime)*1;
+			currentReward+=Math.pow(discountfactor, time - this.lastActionTime)*5;
 			openedDoor = false;
 			return true;
 		} else if (input[5] == -1) { // No reachable door exists
-			System.out.println("Terminating "+this.getClass()+" no door reachable " +input[5]);
-			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
+//			System.out.println("Terminating "+this.getClass()+" no door reachable " +input[5]);
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
 			return true;
 		}
 		return false;
@@ -77,7 +77,9 @@ public class OpenDoor extends SubTask {
 			this.net = (NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println("File does not exist");
 			e.printStackTrace();
+			System.exit(2);
 		}
 
 	}

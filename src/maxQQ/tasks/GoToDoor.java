@@ -26,7 +26,7 @@ public class GoToDoor extends SubTask {
 
 	public GoToDoor(AbstractAction[] as, int[] size, int[] inputKey, Model m, int time) {
 		super(as, size, inputKey, m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(),m);
 		reached = false;
 		opened=false;
 		// TODO Auto-generated constructor stub
@@ -34,7 +34,7 @@ public class GoToDoor extends SubTask {
 
 	public void setModel(Model m, int time) {
 		super.setModel(m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(),m);
 	}
 
 	public AbstractAction getSubtask(double[] rawInput, int time, boolean b) {
@@ -80,15 +80,15 @@ public class GoToDoor extends SubTask {
 	public boolean finished(double[] input, Model model, int time) {
 		if (reached) {
 			if(!this.opened){
-				System.out.println("Reached door without key -1");
-				currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
+//				System.out.println("Reached door without key -1");
+				currentReward += -1;
 			}
 			reached = false;
 			return true;
 		} else if (input[5] == -1) { // No reachable door exists
 			// System.out.println("Terminating "+this.getClass()+" no door
 			// reachable " +input[5]);
-			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
 			return true;
 		}
 		return false;
@@ -131,7 +131,9 @@ public class GoToDoor extends SubTask {
 			this.net = (NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println("File does not exist");
 			e.printStackTrace();
+			System.exit(2);
 		}
 
 	}

@@ -15,8 +15,9 @@ public abstract class SubTask implements AbstractAction, Serializable {
 
 	protected double discountfactor = 0.9;
 	protected double epsilon = 0.0;
-	double minTemp = .1;
-	double decay = .98;
+	protected double temp = 2;
+	double minTemp = .0000000000001;
+	double decay = .96;
 	double maxEpsilon = .99;
 	double epsilonIncrement = 0.001;
 	private AbstractAction[] subTasks;
@@ -30,7 +31,6 @@ public abstract class SubTask implements AbstractAction, Serializable {
 	protected double rewardSum;
 	protected double currentReward;
 	protected double currentPseudoReward;
-	protected double temp = 100;
 	ArrayList<double[]> inputHistory;
 	int windowSize = 1000;
 	transient MovingAverage avg;
@@ -108,7 +108,7 @@ public abstract class SubTask implements AbstractAction, Serializable {
 		double[] out = net.forwardProp(input);
 		double normalized[] = new double[out.length];
 		int h = -1;
-
+		h=0;
 		double max = out[0];
 		for (int i = 1; i < out.length; i++) {
 			if (out[i] >= max) {
@@ -118,8 +118,6 @@ public abstract class SubTask implements AbstractAction, Serializable {
 		}
 
 		if (b) {
-			h = rand.nextInt(out.length);
-
 			double sum = 0;
 
 			for (int i = 0; i < out.length; i++) {
@@ -137,26 +135,20 @@ public abstract class SubTask implements AbstractAction, Serializable {
 					break;
 				}
 			}
-//		if (!(this instanceof Navigate))
-//			System.out.println(this.getClass() + ": " +this.subTasks[h].getClass()+", "+ Arrays.toString(out));
-		} else {
-			h = 0;
-			max = out[0];
-			for (int i = 1; i < out.length; i++) {
-				if (out[i] >= max) {
-					max = out[i];
-					h = i;
-				}
-			}
-//			System.out.println(this.getClass());
-//			System.out.println(Arrays.toString(input));
-//			System.out.println(Arrays.toString(out));
+			// System.out.println(this.getClass() + ": " +
+			// this.subTasks[h].getClass() + ", " + Arrays.toString(out));
+			// if ((this instanceof Navigate)) {
+			// System.out.println(Arrays.toString(input));
+			// }
+		}else{
+//			System.out.println(this.getClass()+": "+Arrays.toString(out));
 		}
+		
 
 		chosenAction = h;
 //		if ((this instanceof Navigate)) {
-//			// System.out.println();
-//			System.out.println(this.getClass() + ", " + subTasks[chosenAction].getClass()+", "+Arrays.toString(out));
+//			System.out.println(Arrays.toString(input));
+//			System.out.println(this.getClass() + ", " + chosenAction + ", " + Arrays.toString(out));
 //		}
 		if (h == -1) {
 			// System.out.println(Arrays.toString(rawInput));
@@ -177,12 +169,13 @@ public abstract class SubTask implements AbstractAction, Serializable {
 
 		// System.out.println("Rewarding: "+this.getClass());
 		inputHistory.addAll(inHist);
-		rewardSum += Math.pow(discountfactor, time - startTime) * (reward + currentReward);
+		rewardSum += Math.pow(discountfactor, lastActionTime - startTime) * (reward + currentReward);
 		double local = (reward + currentReward + currentPseudoReward);
-//		if ((this instanceof OpenDoor)) {
-//			System.out
-//					.println(this.getClass() + ", " + subTasks[chosenAction].getClass() + ", " + reward + ", " + local);
-//		}
+		// if ((this instanceof Navigate)) {
+		// System.out
+		// .println(this.getClass() +", "+((Navigate)this).target+ ", " +
+		// chosenAction+ ", " + reward + ", " + local);
+		// }
 		double[] out;
 		double max = 0;
 		if (!terminate) {
@@ -195,20 +188,25 @@ public abstract class SubTask implements AbstractAction, Serializable {
 					max = nextExpected[i];
 				}
 			}
-		}else{
-//			System.out.println(this.getClass()+": terminate");
-			
+		} else {
+			// System.out.println(this.getClass()+": terminate");
+
 		}
 		boolean first = true;
 		int count = 0;
 		for (double[] in : inputHistory.subList(lastActionTime - startTime, lastActionTime - startTime + 1)) {
-			out = net.forwardProp(decodeInput(in));
+			double[] input = decodeInput(in);
+			out = net.forwardProp(input);
 			out[chosenAction] = local;
 			if (!terminate) {
-				out[chosenAction] += Math.pow(discountfactor, time - lastActionTime - count) * max;
+				out[chosenAction] += Math.pow(discountfactor, time - lastActionTime - count)*max;
 			}
-			if (learn) {
-				net.backProp(in, out.clone());
+			if (learn && (!(this instanceof Navigate) || input[0] > -1 || input[1] > -1 || input[2] > -1
+					|| input[3] > -1)) {
+//				if(this instanceof Navigate){
+//					System.out.println("Reachable and learning, reward: "+out[chosenAction]);
+//				}
+				net.backProp(input, out.clone());
 				avgError.next(net.squaredError);
 				// if (!(this instanceof Navigate))
 				// System.out.println(this.getClass() + ", " + time + ", " +
@@ -261,13 +259,15 @@ public abstract class SubTask implements AbstractAction, Serializable {
 	}
 
 	public void updateDiscount() {
-//		System.out.println(this.getClass() + " avg abs error for last " + this.windowSize + " learn steps: "
-//				+ Math.sqrt(this.avgError.getAvg()));
+		// System.out.println(this.getClass() + " avg abs error for last " +
+		// this.windowSize + " learn steps: "
+		// + Math.sqrt(this.avgError.getAvg()));
 
 		epsilon += epsilonIncrement;
 		epsilon = Math.min(epsilon, maxEpsilon);
 		temp = decay * temp;
 		temp = Math.max(temp, minTemp);
+
 		net.updateLearningRate();
 		// System.out.println(this.getClass()+ " epsilon: "+epsilon);
 	}

@@ -74,10 +74,11 @@ public class View extends JPanel implements Observer {
 				c = tile.getColor();
 
 				// Floodfill test
-				// if(tile.reachable())c=Color.green;
-				if(model.getEnemyMap()[x][y]){
-					c=Color.cyan;
-				}
+//				if (tile.reachable())
+//					c = Color.green;
+				// if(model.getEnemyMap()[x][y]){
+				// c=Color.cyan;
+				// }
 
 				g.setColor(c);
 				g.fillRect(x * absoluteSquareSize + horizontalOffset / 2, y * absoluteSquareSize + verticalOffset / 2,
@@ -144,16 +145,19 @@ public class View extends JPanel implements Observer {
 
 		Bullet b = model.getBullet();
 		if (b != null) {
-			//System.out.println("drawing bullet");
+			// System.out.println("drawing bullet");
 			double mapSize = map.getSize();
 			diameter = Math.max((int) Math.floor(minDimension / map.getSize() / 8), 1);
 			int x1 = (int) Math.floor((b.getX()) / mapSize * minDimension) + horizontalOffset / 2;
 			int y1 = (int) Math.floor((b.getY()) / mapSize * minDimension) + verticalOffset / 2;
-			int x2 = (int) Math.floor((b.getX() / mapSize + (model.bulletDist/mapSize * Math.cos(heading))) * minDimension)
+			int x2 = (int) Math
+					.floor((b.getX() / mapSize + (model.bulletDist / mapSize * Math.cos(heading))) * minDimension)
 					+ horizontalOffset / 2;
-			int y2 = (int) Math.floor((b.getY() / mapSize - (model.bulletDist/mapSize * Math.sin(heading))) * minDimension)
+			int y2 = (int) Math
+					.floor((b.getY() / mapSize - (model.bulletDist / mapSize * Math.sin(heading))) * minDimension)
 					+ verticalOffset / 2;
-			//System.out.println(x1+", "+y1+", "+x2+", "+y2+", "+model.bulletDist);
+			// System.out.println(x1+", "+y1+", "+x2+", "+y2+",
+			// "+model.bulletDist);
 			g.setColor(Color.BLACK);
 			g.drawLine(x1, y1, x2, y2);
 

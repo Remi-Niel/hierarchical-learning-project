@@ -27,16 +27,16 @@ public class Navigate extends SubTask {
 		super(as, size, inputKey, m, time);
 		// TODO Auto-generated constructor stub
 		key = inputKey;
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(), m);
 	}
 
 	public void setModel(Model m, int time) {
 		super.setModel(m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(), m);
 	}
 
 	public void setTarget(int targetX, int targetY, String type) {
-		target=type;
+		target = type;
 		super.inputKey = key.clone();
 		if (type.equals("door")) {
 			for (int i = 0; i < 5; i++) {
@@ -52,9 +52,9 @@ public class Navigate extends SubTask {
 		previousDistance = path.findPath(model.getPlayer().getX(), model.getPlayer().getX(), targetX, targetY,
 				0.95).distance;
 
-		// System.out.print(targetX+", "+targetY+", " +type+": ");
-		// for(int i=0;i<key.length;i++){
-		// System.out.print(super.inputKey[i]+" ");
+		// System.out.print(targetX + ", " + targetY + ", " + type + ": ");
+		// for (int i = 0; i < key.length; i++) {
+		// System.out.print(super.inputKey[i] + " ");
 		// }
 		// System.out.println("");
 	}
@@ -67,30 +67,31 @@ public class Navigate extends SubTask {
 		// System.out.print(input[i]+" ");
 		// }
 		// System.out.println("");
-//		if (model.playerDamaged) {
-//			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 1;
-//		}
+//		System.out.println(target);
+
+		if (model.playerDamaged) {
+			currentPseudoReward -= 2 * Math.pow(discountfactor, time - this.lastActionTime);
+		}
 		if (model.gameOver && model.getPlayer().getHealth() <= 0) {
-			currentPseudoReward -= 10 * Math.pow(discountfactor, time - this.lastActionTime) ;
+			currentPseudoReward -= 5 * Math.pow(discountfactor, time - this.lastActionTime);
 		}
 
 		if (done) {
-//			System.out.println("Reached "+target);
-			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * 10;
-			done=false;
+			// System.out.println("Reached "+target);
+			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime) * 5;
+			done = false;
 			return true;
 		}
 
-		double distance = path.findPath(model.getPlayer().getX(), model.getPlayer().getX(), targetX, targetY,
+		double distance = path.findPath(model.getPlayer().getX(), model.getPlayer().getY(), targetX, targetY,
 				0.95).distance;
-		// System.out.println("NAVIGATE:"+targetX+" "+targetY+"
-		// "+model.getPlayer().getX()+" "+model.getPlayer().getY()+"
-		// "+distance);
+//		System.out.println("NAVIGATE:" + targetX + " " + targetY + " " + model.getPlayer().getX() + " "
+//				+ model.getPlayer().getY() + " " + distance);
 
 		if (previousDistance > distance) {
-			currentPseudoReward += Math.pow(discountfactor, time - this.lastActionTime);
-		} else if (previousDistance < distance) {
-			currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime);
+			currentPseudoReward += 0 * Math.pow(discountfactor, time - this.lastActionTime);
+		} else {
+			currentPseudoReward -= 1 * Math.pow(discountfactor, time - this.lastActionTime);
 		}
 		previousDistance = distance;
 		// currentReward += Math.pow(discountfactor, time - this.startTime) *
@@ -129,17 +130,19 @@ public class Navigate extends SubTask {
 			this.net = (NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println("File does not exist");
 			e.printStackTrace();
+			System.exit(2);
 		}
 
 	}
 
 	public void reachedTarget() {
-		done=true;
-		
+		done = true;
+
 	}
 
 	public void walkedIntoWall(int time) {
-		currentPseudoReward -= 0 * Math.pow(discountfactor, time - this.lastActionTime) ;
+		currentPseudoReward -= 5 * Math.pow(discountfactor, time - this.lastActionTime);
 	}
 }

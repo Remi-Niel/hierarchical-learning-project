@@ -12,7 +12,7 @@ public class Player {
 	private boolean trigger;
 	
 	public Player(double x, double y) {
-		health = 100;
+		health = 5;
 		this.x=x;
 		this.y=y;
 		heading=-1;

@@ -37,7 +37,10 @@ public class Map {
 					tileMap[x][y] = new Wall(x,y);
 					break;
 				case 'D':
-					tileMap[x][y] = new Door(x,y);
+					tileMap[x][y] = new Door(x,y,false);
+					break;
+				case 'M':
+					tileMap[x][y] = new Door(x,y,true);
 					break;
 				case 'K':
 					tileMap[x][y] = new Key(x,y);
@@ -142,11 +145,12 @@ public class Map {
 
 	public void open(int x, int y) {
 		if(tileMap[x][y] instanceof Door && ((Door)tileMap[x][y]).getSolid()){
-			((Door)tileMap[x][y]).open();
+			destroyTile(x, y);
 			open(x+1,y);
 			open(x-1,y);
 			open(x,y+1);
 			open(x,y-1);
+			this.floodFillReachable(x, y);
 		}
 		
 	}

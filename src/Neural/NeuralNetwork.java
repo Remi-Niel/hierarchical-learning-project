@@ -21,15 +21,15 @@ public class NeuralNetwork implements Serializable {
 	ArrayList<ArrayList<Neuron>> network = new ArrayList<ArrayList<Neuron>>(3);
 	final Neuron bias = new Neuron();
 	final int[] layers;
-	final double randomWeightMultiplier = 10;
+	final double randomWeightMultiplier = 1;
 
 	final double epsilon = 0.00000000001;
 
-	public double learningRate = 0.000001f;
-	final double minLearningRate=0.00000000000000001f;
-	final double decay=0.985;
+	public double learningRate = 0.001;
+	final double minLearningRate=0.0000000000001;
+	double decay=.98;
 	
-	final double momentum = 0.0f;
+	final double momentum = 0.0;
 
 	// Inputs for xor problem
 	final double inputs[][] = { { 1, 1 }, { 1, 0 }, { 0, 1 }, { 0, 0 } };
@@ -92,9 +92,50 @@ public class NeuralNetwork implements Serializable {
 		}
 	}
 
+	public NeuralNetwork(int[] size, double rateDecay) {
+		decay=rateDecay;
+		this.layers = size;
+		df = new DecimalFormat("#.0#");
+
+		/**
+		 * Create all neurons and connections Connections are created in the
+		 * neuron class
+		 */
+		for (int i = 0; i < layers.length; i++) {
+			network.add(new ArrayList<Neuron>());
+			for (int j = 0; j < layers[i]; j++) {
+				Neuron neuron = new Neuron();
+				if (i != 0) {
+					neuron.addInConnectionsS(network.get(i - 1));
+					neuron.addBiasConnection(bias);
+				}
+				network.get(i).add(neuron);
+			}
+		}
+		for (ArrayList<Neuron> layer : network.subList(1, network.size())) {
+			for (Neuron neuron : layer) {
+				ArrayList<Connection> connections = neuron.getAllInConnections();
+				for (Connection conn : connections) {
+					double netWeight = getRandom();
+					conn.setWeight(netWeight);
+				}
+			}
+		}
+
+		// reset id counters
+		Neuron.counter = 0;
+		Connection.counter = 0;
+
+		if (isTrained) {
+			trainedWeights();
+			updateAllWeights();
+		}
+		
+	}
+
 	// random
 	double getRandom() {
-		return randomWeightMultiplier * (rand.nextDouble() * 2 - 1); // [-1;1]
+		return randomWeightMultiplier * (rand.nextDouble()*2-1); // [-1;1]
 	}
 
 	/**

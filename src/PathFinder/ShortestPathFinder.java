@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.Random;
 
 import Main.Map;
+import Main.Model;
 import mapTiles.Door;
 
 public class ShortestPathFinder {
@@ -23,15 +24,16 @@ public class ShortestPathFinder {
 	int goalY;
 
 	private Queue<Position> queue;
-	private Map m;
+	private Model model;
 	private double[][][][] distanceFromTo;
 	private int[][][][] direction;
 	boolean[][] map;
 
-	public ShortestPathFinder(Map levelMap) {
-		m = levelMap;
-		map = new boolean[m.getSize()][m.getSize()];
-		int s = m.getSize();
+	public ShortestPathFinder(Map levelMap, Model model) {
+
+		this.model = model;
+		map = new boolean[model.getLevelMap().getSize()][model.getLevelMap().getSize()];
+		int s = model.getLevelMap().getSize();
 		distanceFromTo = new double[s][s][s][s];
 		direction = new int[s][s][s][s];
 		for (int i = 0; i < s; i++) {
@@ -53,7 +55,8 @@ public class ShortestPathFinder {
 
 	private void addState(Position s, double distance, int d) {
 		// System.out.println(map.length);
-		if (!map[s.x][s.y] && (!m.getTile(s.x, s.y).getSolid()) || (m.getTile(s.x, s.y) instanceof Door)) {
+		if (!map[s.x][s.y] && (!model.getLevelMap().getTile(s.x, s.y).getSolid())
+				|| (model.getLevelMap().getTile(s.x, s.y) instanceof Door)) {
 			if (distanceFromTo[startX][startY][s.x][s.y] == -1
 					|| (distance < distanceFromTo[startX][startY][s.x][s.y])) {
 				distanceFromTo[startX][startY][s.x][s.y] = distance;
@@ -64,6 +67,7 @@ public class ShortestPathFinder {
 	}
 
 	public ResultTuple findPath(double x1, double y1, double x2, double y2, double diameter) {
+		Map m = model.getLevelMap();
 		map = new boolean[m.getSize()][m.getSize()];
 		int direction = -1;
 		queue = new LinkedList<Position>();
@@ -73,11 +77,16 @@ public class ShortestPathFinder {
 		goalX = (int) (x2);
 		goalY = (int) (y2);
 
-		distanceFromTo[startX][startY][startX][startY] = 0;
-
-		if (x2 < 0 || y2 < 0 || x2 >= m.getSize() || y2 >= m.getSize() || m.getTile(startX,startY).getSolid()) {
+		// System.out.print(m.getTile(startX, startY).getClass() + " " + startX
+		// + " " + startY + ": ");
+		if (startX < 0 || startY < 0 || startX >= m.getSize() || startY >= m.getSize() || goalX < 0 || goalY < 0
+				|| goalX >= m.getSize() || goalY >= m.getSize()
+				|| (m.getTile(startX, startY).getSolid() && !(m.getTile(startX, startY) instanceof Door))
+				|| ((m.getTile(startX, startY) instanceof Door) && (model.getPlayer().getKeys() <= 0))
+				|| model.collides(x1, y1, true)) {
 			return new ResultTuple(-1, -1);
 		}
+		distanceFromTo[startX][startY][startX][startY] = 0;
 
 		if (distanceFromTo[startX][startY][goalX][goalY] >= 0) {
 			ResultTuple t = new ResultTuple(this.direction[startX][startY][goalX][goalY],

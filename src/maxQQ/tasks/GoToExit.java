@@ -25,13 +25,13 @@ public class GoToExit extends SubTask {
 
 	public GoToExit(AbstractAction[] as, int[] size, int[] inputKey, Model m, int time) {
 		super(as, size, inputKey, m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(),m);
 		reachedExit = false;
 	}
 
 	public void setModel(Model m, int time) {
 		super.setModel(m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(),m);
 	}
 
 	public AbstractAction getSubtask(double[] rawInput, int time, boolean b) {
@@ -78,8 +78,8 @@ public class GoToExit extends SubTask {
 			reachedExit = false;
 			return true;
 		} else if (input[10] == -1) { // No reachable exit
-			System.out.println("Terminating " + this.getClass() + " no exit reachable " + input[10]);
-			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -10;
+//			System.out.println("Terminating " + this.getClass() + " no exit reachable " + input[10]);
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
 			return true;
 		}
 		return false;
@@ -121,7 +121,9 @@ public class GoToExit extends SubTask {
 			this.net = (NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println("File does not exist");
 			e.printStackTrace();
+			System.exit(2);
 		}
 
 	}

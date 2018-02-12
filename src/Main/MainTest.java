@@ -12,9 +12,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 
 public class MainTest {
-	final static double frameLim = 5000;
-	final static int gameLim = 1000000;
-	final static int epochs = 1;
+	final static double frameLim = 1000;
+	final static int gameLim = 500;
+	final static int epochs = 10;
 
 	public static void main(String[] args) throws FileNotFoundException {
 		// TODO Auto-generated method stub
@@ -22,7 +22,7 @@ public class MainTest {
 		int i = 0;
 		int wins = 0;
 		int games = 0;
-		int inc = 10000;
+		int inc = 10;
 		int f = 0;
 
 		String fileName = JOptionPane.showInputDialog("Input neural network id to load network from.");
@@ -36,7 +36,7 @@ public class MainTest {
 		View view = new View(model);
 		Controller c = new Controller(view, frame, model, i + fileName + games);
 		frame.add(view);
-		view.setPreferredSize(new Dimension(1080, 1080));
+		view.setPreferredSize(new Dimension(300, 300));
 		frame.pack();
 		// frame.setSize(1024, 1000);
 		frame.setVisible(true);
@@ -45,11 +45,11 @@ public class MainTest {
 		PrintStream out = new PrintStream(new FileOutputStream(fileName + "_performance.csv"));
 		// System.setOut(out);
 		System.setOut(out);
-		System.out.println("trial,games,epoch,points,result");
+		System.out.println("trial,games,epoch,points,result,frames");
 		System.setOut(stdout);
 
 		for (int t = 0; t < 10000; t++) {
-			while (c.load(t + fileName + games)) {
+			while (games<=gameLim && c.load(t + fileName + games)) {
 				System.out.println("games: " + games);
 				for (int e = 0; e < epochs; e++) {
 					while (!c.gameover() && f < frameLim) {
@@ -58,7 +58,7 @@ public class MainTest {
 						f++;
 					}
 					System.setOut(out);
-					System.out.print(i + "," + games + "," + e + ",");
+					System.out.print(t + "," + games + "," + e + ",");
 
 					if (f >= frameLim) {
 						System.out.print(1 + ",");
@@ -67,14 +67,12 @@ public class MainTest {
 					} else {
 						System.out.print(3 + ",");
 					}
+					System.out.println(model.score+","+f);
 
 					System.setOut(stdout);
 					System.out.println("frames: "+f);
+					c.reset(false, 0);
 					f = 0;
-					c.reset(false, f);
-					System.setOut(out);
-					System.out.println(model.ai.getScore());
-					System.setOut(stdout);
 				}
 				games += inc;
 			}

@@ -25,14 +25,14 @@ public class GetKey extends SubTask {
 
 	public GetKey(AbstractAction[] as, int[] size, int[] inputKey, Model m, int time) {
 		super(as, size, inputKey, m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(),m);
 		gotKey = false;
 		// TODO Auto-generated constructor stub
 	}
 
 	public void setModel(Model m, int time) {
 		super.setModel(m, time);
-		path = new ShortestPathFinder(m.getLevelMap());
+		path = new ShortestPathFinder(m.getLevelMap(),m);
 	}
 
 	public AbstractAction getSubtask(double[] rawInput, int time, boolean b) {
@@ -75,7 +75,7 @@ public class GetKey extends SubTask {
 	public boolean finished(double[] input, Model model, int time) {
 		if (gotKey) {
 			gotKey = false;
-			currentReward+= Math.pow(discountfactor, time - this.lastActionTime)*1;
+			currentReward+= Math.pow(discountfactor, time - this.lastActionTime)*5;
 			return true;
 		} else if (input[0] == -1) {// No reachable key
 			// System.out.println("Terminating "+this.getClass()+" no key
@@ -121,7 +121,9 @@ public class GetKey extends SubTask {
 			this.net = (NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println("File does not exist");
 			e.printStackTrace();
+			System.exit(2);
 		}
 
 	}

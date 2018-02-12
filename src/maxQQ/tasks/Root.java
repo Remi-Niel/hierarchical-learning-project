@@ -23,12 +23,12 @@ public class Root extends SubTask {
 	public boolean finished(double[] input, Model model, int time) {
 		if (model.gameOver && (model.getPlayer().getHealth() > 0)) {
 			System.out.println("Win, epsilon= "+this.epsilon+", temp= "+this.temp+", rate:"+this.net.learningRate);
-			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*1000;
+			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*10;
 			return true;
 		}else if(model.gameOver && model.win){
 			model.win=false;
 			System.out.println("Loss, epsilon= "+this.epsilon+", temp= " + this.temp+", rate:"+this.net.learningRate);
-			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*-1000;
+			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*-10;
 			return true;
 		}else if(model.gameOver){
 			System.out.println("Draw, epsilon= " + this.epsilon + ", temp= " + this.temp+", rate:"+this.net.learningRate);
@@ -71,7 +71,9 @@ public class Root extends SubTask {
 			this.net=(NeuralNetwork) readFromFile(fileName);
 		} catch (ClassNotFoundException | IOException e) {
 			// TODO Auto-generated catch block
+			System.err.println("File does not exist");
 			e.printStackTrace();
+			System.exit(2);
 		}
 		
 	}

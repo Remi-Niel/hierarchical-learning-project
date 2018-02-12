@@ -28,7 +28,7 @@ public class Model {
 	Queue<State> history;
 	String map;
 	AI ai;
-	final int timeLimit = 10000;
+	final int timeLimit = 50000;
 	public boolean enemyDied;
 	public boolean enemyDamaged;
 	public boolean playerDamaged;
@@ -45,7 +45,7 @@ public class Model {
 			e.printStackTrace();
 		}
 		// System.out.println(enemyList.size());
-		p = new ShortestPathFinder(levelMap);
+		p = new ShortestPathFinder(levelMap, this);
 		mapSize = (double) levelMap.getSize();
 		enemyMap = new boolean[levelMap.getSize()][levelMap.getSize()];
 		player = new Player((levelMap.getSpawnX() + 0.5), (levelMap.getSpawnY() + 0.5));
@@ -210,6 +210,9 @@ public class Model {
 			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter) {
 				this.playerDamaged = true;
 				gameOver = gameOver || player.damage(e.getHealth());
+				if (gameOver) {
+					score -= 100;
+				}
 				if (e instanceof Ghost) {
 					((Ghost) e).getParent().decrementCount();
 				}
@@ -218,6 +221,8 @@ public class Model {
 				if (ai instanceof HierarchicalAI) {
 					((LinkedList<State>) history).getLast().damagedEnemy();
 					((LinkedList<State>) history).getLast().damaged();
+					if (gameOver)
+						((LinkedList<State>) history).getLast().death();
 				}
 
 			}
@@ -226,56 +231,78 @@ public class Model {
 		updateEnemyMap();
 	}
 
-	public boolean collides(double x, double y) {
+	public boolean collides(double x, double y, int g) {
 
-		Tile t[] = new Tile[5];
+		Tile t[] = new Tile[9];
+
+		State current = null;
+		if (ai instanceof HierarchicalAI && history.size() > 0)
+			current = ((LinkedList<State>) history).getLast();
 
 		t[0] = levelMap.getTile((int) (x + 0.4), (int) (y - 0.4));
 		t[1] = levelMap.getTile((int) (x + 0.4), (int) (y + 0.4));
 		t[2] = levelMap.getTile((int) (x - 0.4), (int) (y - 0.4));
 		t[3] = levelMap.getTile((int) (x - 0.4), (int) (y + 0.4));
-		State current = null;
-		if (ai instanceof HierarchicalAI)
-			current = ((LinkedList<State>) history).getLast();
+		t[4] = levelMap.getTile((int) (x + 0.4), (int) (y));
+		t[5] = levelMap.getTile((int) (x - 0.4), (int) (y));
+		t[6] = levelMap.getTile((int) (x), (int) (y + 0.4));
+		t[7] = levelMap.getTile((int) (x), (int) (y - 0.4));
+		t[8] = levelMap.getTile((int) (x), (int) (y));
 
-		for (int i = 0; i < 4; i++) {
+		for (int i = 0; i < 9; i++) {
 			if (t[i].getSolid()) {
 				if (t[i] instanceof Door) {
 					if (ai instanceof HierarchicalAI)
 						current.reachedDoor();
 					if (ai instanceof MaxQQ_AI) {
-						((MaxQQ_AI) ai).reachedDoor(player.getKeys()>0);
+						((MaxQQ_AI) ai).reachedDoor(player.getKeys() > 0);
 					}
 					if (player.useKey()) {
-						score++;
+						score += 20;
 						if (ai instanceof HierarchicalAI)
 							current.openedDoor();
 						if (ai instanceof MaxQQ_AI) {
 							((MaxQQ_AI) ai).openedDoor();
 						}
+
 						levelMap.open(t[i].getX(), t[i].getY());
 						levelMap.floodFillReachable(t[i].getX(), t[i].getY());
 					} else {
+						if (ai instanceof MaxQQ_AI) {
+							((MaxQQ_AI) ai).walkedIntoWall(g);
+						}
+						if (ai instanceof HierarchicalAI) {
+							current.hitWall();
+						}
 						return true;
 					}
 				} else {
+					if (ai instanceof MaxQQ_AI) {
+						((MaxQQ_AI) ai).walkedIntoWall(g);
+					}
+					if (ai instanceof HierarchicalAI) {
+						current.hitWall();
+					}
 					return true;
 				}
 			}
-			
-			
 
 		}
-
-
-		t[0] = levelMap.getTile((int) (x + 0.6), (int) (y - 0.6));
-		t[1] = levelMap.getTile((int) (x + 0.6), (int) (y + 0.6));
-		t[2] = levelMap.getTile((int) (x - 0.6), (int) (y - 0.6));
-		t[3] = levelMap.getTile((int) (x - 0.6), (int) (y + 0.6));
+		boolean key = false;
+		t[0] = levelMap.getTile((int) (x + .8), (int) (y - .8));
+		t[1] = levelMap.getTile((int) (x + .8), (int) (y + .8));
+		t[2] = levelMap.getTile((int) (x - .8), (int) (y - .8));
+		t[3] = levelMap.getTile((int) (x - .8), (int) (y + .8));
 		t[4] = levelMap.getTile((int) (x), (int) (y));
-		for (int i = 0; i < 5; i++) {
-			if (t[i] instanceof Key) {
-				score++;
+		t[5] = levelMap.getTile((int) (x + .8), (int) (y));
+		t[6] = levelMap.getTile((int) (x - .8), (int) (y));
+		t[7] = levelMap.getTile((int) (x), (int) (y + .8));
+		t[8] = levelMap.getTile((int) (x), (int) (y - .8));
+
+		for (int i = 0; i < 9; i++) {
+			if (t[i] instanceof Key && !key) {
+				key = !key;
+				score += 10;
 				if (ai instanceof HierarchicalAI)
 					current.gotKey();
 				if (ai instanceof MaxQQ_AI) {
@@ -292,7 +319,8 @@ public class Model {
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
 			if (t[i] instanceof Exit) {
-				score += 100;
+				if (!gameOver)
+					score += 100;
 				if (ai instanceof HierarchicalAI)
 					current.win();
 				gameOver = true;
@@ -303,7 +331,36 @@ public class Model {
 			}
 
 		}
-		
+		return false;
+	}
+
+	public boolean collides(double x, double y, boolean b) {
+
+		Tile t[] = new Tile[9];
+
+		t[0] = levelMap.getTile((int) (x + 0.4), (int) (y - 0.4));
+		t[1] = levelMap.getTile((int) (x + 0.4), (int) (y + 0.4));
+		t[2] = levelMap.getTile((int) (x - 0.4), (int) (y - 0.4));
+		t[3] = levelMap.getTile((int) (x - 0.4), (int) (y + 0.4));
+		t[4] = levelMap.getTile((int) (x + 0.4), (int) (y));
+		t[5] = levelMap.getTile((int) (x - 0.4), (int) (y));
+		t[6] = levelMap.getTile((int) (x), (int) (y + 0.4));
+		t[7] = levelMap.getTile((int) (x), (int) (y - 0.4));
+		t[8] = levelMap.getTile((int) (x), (int) (y));
+
+		for (int i = 0; i < 4; i++) {
+			if (t[i].getSolid()) {
+				if (t[i] instanceof Door) {
+					if (player.getKeys() <= 0) {
+						return true;
+					}
+				} else {
+					return true;
+				}
+			}
+
+		}
+
 		return false;
 	}
 
@@ -321,19 +378,16 @@ public class Model {
 		x += dx;
 		y += dy;
 
-		if (!collides(x, y)) {
+		if (!collides(x, y, t)) {
 			player.move(x, y);
 		} else {
-			if(ai instanceof MaxQQ_AI){
-				((MaxQQ_AI)ai).walkedIntoWall(t);
-			}
 			x -= dx;
-			if (!collides(x, y)) {
+			if (!collides(x, y, t)) {
 				player.move(x, y);
-			}else{
-				x+=dx;
-				y-=dy;
-				if (!collides(x, y)) {
+			} else {
+				x += dx;
+				y -= dy;
+				if (!collides(x, y, t)) {
 					player.move(x, y);
 				}
 			}

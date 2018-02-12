@@ -28,47 +28,53 @@ public class Controller extends Observable {
 		this.m = m;
 		this.setChanged();
 		this.notifyObservers();
-		// ai=new ManualAI();
-		// ai = new HierarchicalAI(m);
+//		 ai=new ManualAI(m);
+		ai = new HierarchicalAI(m);
+//		 ai = new MaxQQ_AI(m);
 		dir = new File("AIs");
 		dir.mkdirs();
-		ai = new MaxQQ_AI(m);
 		if (new File(dir, file).exists()) {
 			ai.load(file);
 		}
-	
+
 		m.setAI(ai);
-		((MaxQQ_AI)ai).setModel(m, 0);
+
+		if (ai instanceof MaxQQ_AI)
+			((MaxQQ_AI) ai).setModel(m, 0);
+		if (ai instanceof HierarchicalAI)
+			((HierarchicalAI) ai).setModel(m, 0);
 		if (ai instanceof ManualAI) {
 			v.setFocusable(true);
 			f.setFocusable(true);
 			v.addKeyListener((ManualAI) ai);
 			f.addKeyListener((ManualAI) ai);
+			((ManualAI)ai).setModel(m,0);
 		}
 		learn = true;
 	}
 
-	public void update(int time, boolean b,boolean draw) {
+	public void update(int time, boolean b, boolean draw) {
+//		 System.out.println("determine action");
 		ai.determineAction(time, b);
 		m.playerDamaged = false;
 		m.enemyDamaged = false;
 		m.enemyDied = false;
-		// System.out.println("update player");
+//		 System.out.println("update player");
 		m.updatePlayer(time);
 
-		// System.out.println("update spawners");
+//		 System.out.println("update spawners");
 		m.tickSpawners();
-		// System.out.println("update bullets");
+//		 System.out.println("update bullets");
 		m.updateBullets(time);
-		// System.out.println("Move enemies");
+//		 System.out.println("Move enemies");
 		m.moveEnemies();
-		
+
 		if (ai instanceof MaxQQ_AI) {
 			((MaxQQ_AI) ai).checkTerminate(time, b);
 		}
-		
+
 		if (draw) {
-			// System.out.println("Notify observers");
+//			 System.out.println("Notify observers");
 			setChanged();
 			notifyObservers();
 		}
@@ -90,10 +96,9 @@ public class Controller extends Observable {
 	}
 
 	public boolean load(String string) {
-		System.out.println("Attempting to restore snapshot "+string);
+		System.out.println("Attempting to restore snapshot " + string);
 		ai.load(string);
-		
-		
+
 		return true;
 	}
 
