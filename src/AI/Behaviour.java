@@ -63,7 +63,7 @@ public class Behaviour implements Serializable {
 	}
 
 	public void updateNetwork(State current, State next, boolean mainBehaviour) {
-		double reward = 0;
+		double reward = 0; //step reward
 
 		for (int i = 0; i < current.rewards.length; i++) {
 			reward += rewardWeights[i] * current.rewards[i];

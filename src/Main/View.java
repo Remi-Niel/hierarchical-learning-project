@@ -76,9 +76,9 @@ public class View extends JPanel implements Observer {
 				// Floodfill test
 //				if (tile.reachable())
 //					c = Color.green;
-				// if(model.getEnemyMap()[x][y]){
-				// c=Color.cyan;
-				// }
+//				if (model.getEnemyMap()[x][y]) {
+//					c = Color.cyan;
+//				}
 
 				g.setColor(c);
 				g.fillRect(x * absoluteSquareSize + horizontalOffset / 2, y * absoluteSquareSize + verticalOffset / 2,

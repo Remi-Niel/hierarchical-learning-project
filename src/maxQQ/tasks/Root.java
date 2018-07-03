@@ -25,7 +25,7 @@ public class Root extends SubTask {
 			System.out.println("Win, epsilon= "+this.epsilon+", temp= "+this.temp+", rate:"+this.net.learningRate);
 			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*10;
 			return true;
-		}else if(model.gameOver && model.win){
+		}else if(model.gameOver && !model.win){
 			model.win=false;
 			System.out.println("Loss, epsilon= "+this.epsilon+", temp= " + this.temp+", rate:"+this.net.learningRate);
 			this.currentReward += Math.pow(discountfactor, time-this.lastActionTime)*-10;

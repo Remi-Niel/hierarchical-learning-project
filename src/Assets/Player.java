@@ -3,7 +3,7 @@ package Assets;
 public class Player {
 	
 	public final double speed=1;
-	private final int reloadTime=8;
+	private final int reloadTime=0;
 	private long lastFire=reloadTime;
 	private int health;
 	private double x,y;
@@ -12,7 +12,7 @@ public class Player {
 	private boolean trigger;
 	
 	public Player(double x, double y) {
-		health = 5;
+		health = 3;
 		this.x=x;
 		this.y=y;
 		heading=-1;

@@ -15,9 +15,9 @@ public abstract class SubTask implements AbstractAction, Serializable {
 
 	protected double discountfactor = 0.9;
 	protected double epsilon = 0.0;
-	protected double temp = 2;
-	double minTemp = .0000000000001;
-	double decay = .96;
+	protected double temp = 4;
+	double minTemp = .1;
+	double decay = .98;
 	double maxEpsilon = .99;
 	double epsilonIncrement = 0.001;
 	private AbstractAction[] subTasks;
@@ -103,12 +103,17 @@ public abstract class SubTask implements AbstractAction, Serializable {
 		// TODO Auto-generated method stub
 		lastActionTime = time;
 		currentReward = currentPseudoReward = 0;
+		
+		if (!b) {
+			this.temp = 0.1;
+			b=true;
+		}
 
 		double[] input = decodeInput(rawInput);
 		double[] out = net.forwardProp(input);
 		double normalized[] = new double[out.length];
 		int h = -1;
-		h=0;
+		h = 0;
 		double max = out[0];
 		for (int i = 1; i < out.length; i++) {
 			if (out[i] >= max) {
@@ -140,16 +145,16 @@ public abstract class SubTask implements AbstractAction, Serializable {
 			// if ((this instanceof Navigate)) {
 			// System.out.println(Arrays.toString(input));
 			// }
-		}else{
-//			System.out.println(this.getClass()+": "+Arrays.toString(out));
+		} else {
+			// System.out.println(this.getClass()+": "+Arrays.toString(out));
 		}
-		
 
 		chosenAction = h;
-//		if ((this instanceof Navigate)) {
-//			System.out.println(Arrays.toString(input));
-//			System.out.println(this.getClass() + ", " + chosenAction + ", " + Arrays.toString(out));
-//		}
+		// if ((this instanceof Navigate)) {
+		// System.out.println(Arrays.toString(input));
+		// System.out.println(this.getClass() + ", " + chosenAction + ", " +
+		// Arrays.toString(out));
+		// }
 		if (h == -1) {
 			// System.out.println(Arrays.toString(rawInput));
 			// System.out.println(Arrays.toString(normalized));
@@ -194,18 +199,22 @@ public abstract class SubTask implements AbstractAction, Serializable {
 		}
 		boolean first = true;
 		int count = 0;
+		if (inputHistory.size() <= 0)
+			return;
+
 		for (double[] in : inputHistory.subList(lastActionTime - startTime, lastActionTime - startTime + 1)) {
 			double[] input = decodeInput(in);
 			out = net.forwardProp(input);
 			out[chosenAction] = local;
 			if (!terminate) {
-				out[chosenAction] += Math.pow(discountfactor, time - lastActionTime - count)*max;
+				out[chosenAction] += Math.pow(discountfactor, time - lastActionTime - count) * max;
 			}
 			if (learn && (!(this instanceof Navigate) || input[0] > -1 || input[1] > -1 || input[2] > -1
 					|| input[3] > -1)) {
-//				if(this instanceof Navigate){
-//					System.out.println("Reachable and learning, reward: "+out[chosenAction]);
-//				}
+				// if(this instanceof Navigate){
+				// System.out.println("Reachable and learning, reward:
+				// "+out[chosenAction]);
+				// }
 				net.backProp(input, out.clone());
 				avgError.next(net.squaredError);
 				// if (!(this instanceof Navigate))

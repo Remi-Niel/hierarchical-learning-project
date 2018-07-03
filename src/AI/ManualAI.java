@@ -13,6 +13,7 @@ import PathFinder.ShortestPathFinder;
 import mapTiles.Door;
 import mapTiles.Exit;
 import mapTiles.Key;
+import mapTiles.Spawner;
 import mapTiles.Tile;
 
 public class ManualAI implements AI, KeyListener {
@@ -328,32 +329,32 @@ public class ManualAI implements AI, KeyListener {
 
 			}
 		}
-		input[49] = 1 / (1 + sum);
-		input[50] = model.getPlayer().getHealth() / 5;
+		input[49] = 1.0 / (1 + sum);
+		input[50] = model.getPlayer().getHealth() / 5.0;
 		return input;
 
+	}
+	
+	public double bulletDistance(double x1, double y1,double x, double y, double heading) {
+
+		double x2 = x1 + (1000 / model.getLevelMap().getSize() * Math.cos(heading));
+		double y2 = y1 - (1000 / model.getLevelMap().getSize() * Math.sin(heading));
+
+		double ch = (y1 - y2) * x + (x2 - x1) * y + (x1 * y2 - x2 * y1);
+		double del = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+		double distance = ch / del;
+
+		return distance;
 	}
 
 	private int Hits(double heading) {
 		int count = 0;
-
 		Player p = model.getPlayer();
 		double minDist = Double.MAX_VALUE;
 
 		for (Tile ts[] : model.getLevelMap().getTileMap()) {
 			for (Tile t : ts) {
-
-				double x = t.getX();
-				double y = t.getY();
-				double x1 = model.getPlayer().getX();
-				double y1 = model.getPlayer().getY();
-				double x2 = x1 + (1000 * Math.cos(heading));
-				double y2 = y1 - (1000 * Math.sin(heading));
-
-				double ch = (y1 - y2) * x + (x2 - x1) * y + (x1 * y2 - x2 * y1);
-				double del = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-				double distance = ch / del;
-
+			
 				double absHeading = -Math.atan2(t.getY() - model.getPlayer().getY(),
 						t.getX() - model.getPlayer().getX());
 				if (absHeading < 0)
@@ -361,9 +362,14 @@ public class ManualAI implements AI, KeyListener {
 
 				double relativeHeading = Math.abs(absHeading - heading);
 
-				if (relativeHeading < Math.PI / 2 && t.getSolid() && distance < 1.5) {
+				if (relativeHeading < Math.PI / 2 && t.getSolid() && Math.abs(bulletDistance(model.getPlayer().getX(),model.getPlayer().getY(),t.getX(), t.getY(),heading)) < 1.5) {
 					if (model.distance(t.getX(), p.getX(), t.getY(), p.getY()) < minDist) {
 						minDist = model.distance(t.getX(), p.getX(), t.getY(), p.getY());
+						if(t instanceof Spawner){
+							count=1;
+						}else{
+							count=0;
+						}
 					}
 				}
 			}

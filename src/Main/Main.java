@@ -11,6 +11,7 @@ import javax.swing.JOptionPane;
 public class Main {
 	final static double frameLim = 10000;
 	final static int gameLim = 500;
+	final static int maxEpoch=50;
 
 	public static void main(String[] args) throws InterruptedException {
 		// TODO Auto-generated method stub
@@ -21,7 +22,7 @@ public class Main {
 		JLabel emptyLabel = new JLabel("");
 		frame.getContentPane().add(emptyLabel, BorderLayout.CENTER);
 
-		Model model = new Model("map");
+		Model model = new Model("trainMaze");
 		View view = new View(model);
 		Controller c = new Controller(view, frame, model, fileName);
 		frame.add(view);
@@ -29,7 +30,7 @@ public class Main {
 		frame.pack();
 		// frame.setSize(1024, 1000);
 		frame.setVisible(true);
-		int i = 0;
+		int i = 49;
 		int wins = 0;
 		int games = 0;
 		int f = 0;
@@ -46,9 +47,11 @@ public class Main {
 				f = 0;
 				games = 0;
 				i++;
+				if(i==maxEpoch)
+					break;
 			}
 
-			if (games % 10 == 0 && f == 0) {
+			if (games % 20 == 0 && f == 0) {
 				System.out.println("Network: " + i + ", Game: " + games);
 				try {
 					c.storeAI(i, games);
@@ -57,10 +60,10 @@ public class Main {
 				}
 			}
 
-			c.update(f, true, games % 1 == 0);
+			c.update(f, true, false);
 
-//			if (games > 300)
-//				Thread.sleep(1000);
+//			if (games >400)
+//				Thread.sleep(100);
 
 			f++;
 

@@ -88,7 +88,7 @@ public class GoToDoor extends SubTask {
 		} else if (input[5] == -1) { // No reachable door exists
 			// System.out.println("Terminating "+this.getClass()+" no door
 			// reachable " +input[5]);
-			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
 			return true;
 		}
 		return false;

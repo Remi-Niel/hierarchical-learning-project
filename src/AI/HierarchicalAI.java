@@ -28,12 +28,12 @@ public class HierarchicalAI implements AI, Serializable {
 	boolean shoot;
 	double heading;
 	Behaviour mainBehaviour;
-	int inputs = 51;
+	int inputs = 78;
 	int inputsCombat = 49;
 	Behaviour[] subBehaviours = new Behaviour[4];
 	int[] sizeMain = { 6, 50, subBehaviours.length };
-	int[] sizeSubDef = { -1, 300, 16 };
-	int[] sizeSubCombat = { -1, 150, 16 };
+	int[] sizeSubDef = { -1, 50, 16 };
+	int[] sizeSubCombat = { -1, 100, 16 };
 
 	int[] navKey;
 	int[] navDoor;
@@ -42,13 +42,13 @@ public class HierarchicalAI implements AI, Serializable {
 	double[] doorReward;
 	double[] exitReward;
 
-	protected double temp = .5;
-	protected double tempMain = .1;
-	double decay = .97;
-	double decayMain = .97;
-	double mintemp = 0.00000001;
+	protected double temp = 4;
+	protected double tempMain = 4;
+	double decay = .98;
+	double decayMain = .98;
+	double mintemp = 0.1;
 
-	double discountFactor = .9;
+	double discountFactor = .99;
 	double epsilon = .80;
 	double maxEpsilon = .95;
 	double epsilonIncrement = 0.005;
@@ -83,59 +83,45 @@ public class HierarchicalAI implements AI, Serializable {
 
 	private void constructBehaviours() {
 
-		double[] rewardWeights = new double[] { 100, 0, 5, 5, 2, 1, -100, -2, 0, 0, 0, 0, -5};
-		int[] inputKey = new int[] { 0, 5, 10, 15, 49, 50 };
+		double[] rewardWeights = new double[] { 10, 0, 5, 10, 2, 20, -10, -10, 0, 0, 0, 0, -1, 0 };
+		int[] inputKey = new int[] { 0, 5, 10, 15, 73, 74 };
 		mainBehaviour = new Behaviour(sizeMain, rewardWeights, inputKey, "Main");
 
-		/*
-		 * Gets reward for reaching a key, it also gets punished for being
-		 * damaged. We hope when giving it the enemies in its vicinity it will
-		 * learn to dodge those while still reaching its goal.
-		 */
-
-		keyReward = new double[] { 0, 0, 5, 0, 0, 0, -50, -5, -1, 0, 0, -5, 0 };
+		keyReward = new double[] { 0, 0, 5, 0, 0, 0, 0, 0, -5, 0, 0, -1, 0, 0 };
 		navKey = new int[] { 1, 2, 3, 4, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43,
-				44, 45, 46, 47, 48, 50 };
+				44, 45, 46, 47, 48, 74 };
+		navKey = new int[] { 1, 2, 3, 4 };
 		subBehaviours[0] = new Navigate(sizeSubDef, keyReward, navKey, "Keyfinder");
 		subBehaviours[1] = subBehaviours[0];
 		subBehaviours[2] = subBehaviours[0];
 
-		/*
-		 * Gets reward for reaching a door, it also gets punished for being
-		 * damaged. We hope when giving it the enemies in its vicinity it will
-		 * learn to dodge those while still reaching its goal. Its get the door
-		 * reached reward regardless of if it has a key or not The main
-		 * behaviour should learn not to approach a door while not carrying a
-		 * key.
-		 */
-		doorReward = new double[] { 0, 5, 0, 0, 0, 0, -50, -5, 0, -1, 0, -5, 0 };
+		doorReward = new double[] { 0, 5, 0, 0, 0, 0, 0, 0, 0, -5, 0, -1, 0, 0 };
 
 		navDoor = new int[] { 6, 7, 8, 9, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42,
-				43, 44, 45, 46, 47, 48, 50 };
+				43, 44, 45, 46, 47, 48, 74 };
+		navDoor = new int[] { 6, 7, 8, 9 };
 
-		/*
-		 * Gets reward for reaching a exit, it also gets punished for being
-		 * damaged. We hope when giving it the enemies in its vicinity it will
-		 * learn to dodge those while still reaching its goal.
-		 */
-		exitReward = new double[] { 5, 0, 0, 0, 0, 0, -50, -5, 0, 0, -1, -5, 0 };
+		exitReward = new double[] { 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, -5, -1, 0, 0 };
 
 		navExit = new int[] { 11, 12, 13, 14, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
-				42, 43, 44, 45, 46, 47, 48, 50 };
+				42, 43, 44, 45, 46, 47, 48, 74 };
+		navExit = new int[] { 11, 12, 13, 14 };
 
-		rewardWeights = new double[] { 0, 0, 0, 0, 0, 5, -50, -5, 0, 0, 0, 0, -1 };
+		rewardWeights = new double[] { 0, 0, 0, 0, 0, 5, -10, -2, 0, 0, 0, -1, 0, -2 };
 		inputKey = new int[] { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
-				38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 };
+				38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+				64, 65, 66, 67, 68, 69, 70, 71, 71, 72, 73, 74 };
 		subBehaviours[3] = new Behaviour(sizeSubCombat, rewardWeights, inputKey, "Combat");
 	}
 
 	public void determineAction(int time, boolean b) {
-
+		
 		this.update();
 
 		if (!b) {
-			this.temp = 0.01;
-			this.tempMain = 0.01;
+			this.temp = 0.1;
+			this.tempMain = 0.1;
+			b=true;
 		}
 
 		double[] input = determineInput();
@@ -159,6 +145,7 @@ public class HierarchicalAI implements AI, Serializable {
 		double sum = 0;
 		double normalized[] = new double[out.length];
 		if (b) {
+//		if (true) {
 			for (int i = 0; i < out.length; i++) {
 				normalized[i] = Math.exp((out[i] - max) / tempMain);
 				sum += normalized[i];
@@ -221,7 +208,8 @@ public class HierarchicalAI implements AI, Serializable {
 				action = i;
 			}
 		}
-		if (b) {
+		 if (b) {
+//		if (true) {
 			sum = 0;
 			normalized = new double[out.length];
 			for (int i = 0; i < out.length; i++) {
@@ -240,6 +228,8 @@ public class HierarchicalAI implements AI, Serializable {
 					break;
 				}
 			}
+		} else {
+			// System.out.println(behaviour+": "+Arrays.toString(out));
 		}
 		// int action = 0;
 		// max = output[0];
@@ -262,7 +252,7 @@ public class HierarchicalAI implements AI, Serializable {
 		s.distanceKey = distanceKey;
 		if (!reachable) {
 			s.targetNotReachable();
-			// System.out.print("Not reachable! ");
+			// System.out.println("Target not reachable");
 		}
 		history.add(s);
 
@@ -276,6 +266,7 @@ public class HierarchicalAI implements AI, Serializable {
 		// } else {
 		// System.out.println("combat");
 		// }
+		// System.out.println(Arrays.toString(input));
 		// System.out.println(Arrays.toString(out));
 		// System.out.println((action));
 
@@ -288,7 +279,7 @@ public class HierarchicalAI implements AI, Serializable {
 	 * Constructs and returns the global input for the neural networks.
 	 */
 	public double[] determineInput() {
-		int inputs = 51;
+		int inputs = 78;
 		double[] input = new double[inputs];
 
 		Door nearestDoor = null;
@@ -433,6 +424,9 @@ public class HierarchicalAI implements AI, Serializable {
 				input[i] = 1 - ((input[i] - min) / (max - min));
 			}
 		}
+		input[75] = input[0];
+		input[76] = input[5];
+		input[77] = input[10];
 		double min = Double.POSITIVE_INFINITY;
 		double max = Double.NEGATIVE_INFINITY;
 		for (int i = 0; i <= 10; i = i + 5) {
@@ -459,15 +453,22 @@ public class HierarchicalAI implements AI, Serializable {
 			input[16 + i] = Hits(i * Math.PI / 4);
 			sum += input[16 + i];
 		}
+		model.updateEnemyMap();
 		int count = 0;
-		for (int x = -2; x < 3; x++) {
-			for (int y = -2; y < 3; y++) {
+		for (int x = -3; x < 4; x++) {
+			for (int y = -3; y < 4; y++) {
 				int fX = (int) p.getX() - x;
 				int fY = (int) p.getY() - y;
+				int distance = Math.abs(x) + Math.abs(y);
+				double travelDistance = path.findPath(p.getX(), p.getY(), fX, fY, .95).distance;
 				if (fX > 0 && fY > 0 && fX < model.getLevelMap().getSize() && fY < model.getLevelMap().getSize()
-						&& model.getEnemyMap()[(int) p.getX() - x][(int) p.getY() - y]) {
+						&& model.getLevelMap().getTile(fX, fY).reachable() && model.getEnemyMap()[fX][fY]
+						&& travelDistance <= distance) {
 					input[24 + count] = 1;
 					sum++;
+				} else if (fX > 0 && fY > 0 && fX < model.getLevelMap().getSize() && fY < model.getLevelMap().getSize()
+						&& model.getLevelMap().getTile((int) p.getX() - x, (int) p.getY() - y).getSolid()) {
+					input[24 + count] = -1;
 				} else {
 					input[24 + count] = 0;
 				}
@@ -475,31 +476,31 @@ public class HierarchicalAI implements AI, Serializable {
 
 			}
 		}
-		input[49] = 1 / (1 + sum);
-		input[50] = model.getPlayer().getHealth() / 5;
+		input[73] = 1 / (1 + sum);
+		input[74] = model.getPlayer().getHealth() / 3;
 		return input;
 
 	}
 
+	public double bulletDistance(double x1, double y1, double x, double y, double heading) {
+
+		double x2 = x1 + (1000 / model.getLevelMap().getSize() * Math.cos(heading));
+		double y2 = y1 - (1000 / model.getLevelMap().getSize() * Math.sin(heading));
+
+		double ch = (y1 - y2) * x + (x2 - x1) * y + (x1 * y2 - x2 * y1);
+		double del = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+		double distance = ch / del;
+
+		return distance;
+	}
+
 	private int Hits(double heading) {
 		int count = 0;
-
 		Player p = model.getPlayer();
 		double minDist = Double.MAX_VALUE;
 
 		for (Tile ts[] : model.getLevelMap().getTileMap()) {
 			for (Tile t : ts) {
-
-				double x = t.getX();
-				double y = t.getY();
-				double x1 = model.getPlayer().getX();
-				double y1 = model.getPlayer().getY();
-				double x2 = x1 + (1000 * Math.cos(heading));
-				double y2 = y1 - (1000 * Math.sin(heading));
-
-				double ch = (y1 - y2) * x + (x2 - x1) * y + (x1 * y2 - x2 * y1);
-				double del = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
-				double distance = ch / del;
 
 				double absHeading = -Math.atan2(t.getY() - model.getPlayer().getY(),
 						t.getX() - model.getPlayer().getX());
@@ -507,16 +508,26 @@ public class HierarchicalAI implements AI, Serializable {
 					absHeading += 2 * Math.PI;
 
 				double relativeHeading = Math.abs(absHeading - heading);
-
-				if (relativeHeading < Math.PI / 2 && t.getSolid() && distance < 1.5) {
+				if (relativeHeading < Math.PI / 2 && t.getSolid() && Math.abs(bulletDistance(model.getPlayer().getX(),
+						model.getPlayer().getY(), t.getX(), t.getY(), heading)) < 1.5) {
 					if (model.distance(t.getX(), p.getX(), t.getY(), p.getY()) < minDist) {
 						minDist = model.distance(t.getX(), p.getX(), t.getY(), p.getY());
+						if (t instanceof Spawner) {
+							count = 1;
+						} else {
+							count = 0;
+						}
 					}
 				}
 			}
 		}
 
 		for (Enemy e : model.getEnemyList()) {
+
+			if (!model.getLevelMap().getTile((int) (e.getX()), (int) (e.getY())).reachable()) {
+				continue;
+			}
+
 			double x = e.getX();
 			double y = e.getY();
 			double x1 = model.getPlayer().getX();
@@ -534,8 +545,11 @@ public class HierarchicalAI implements AI, Serializable {
 
 			double relativeHeading = Math.abs(absHeading - heading);
 
-			if (relativeHeading < Math.PI / 2 && distance < 1.5
-					&& model.distance(e.getX(), p.getX(), e.getY(), p.getY()) < minDist)
+			double dist = Math.abs(p.getX() - e.getX()) + Math.abs(p.getY() - e.getY());
+			double pathdist = path.findPath(x1, y1, x2, y2, .95).distance;
+
+			if (relativeHeading < Math.PI / 2 && Math.abs(distance) < 1.5
+					&& model.distance(e.getX(), p.getX(), e.getY(), p.getY()) < minDist && pathdist <= dist)
 				count++;
 
 		}
@@ -558,14 +572,20 @@ public class HierarchicalAI implements AI, Serializable {
 			if (current.distanceKey <= next.distanceKey) {
 				// System.out.println(current.action+ "Wrong direction key");
 				current.rewards[8] = 1;
+				// if(current.behaviour==0)
+				// model.score--;
 			}
 			if (current.distanceDoor <= next.distanceDoor) {
 				// System.out.println(current.action+ " Wrong direction door");
 				current.rewards[9] = 1;
+				// if(current.behaviour==1)
+				// model.score--;
 			}
 			if (current.distanceExit <= next.distanceExit) {
 				// System.out.println(current.action+ " Wrong direction exit");
 				current.rewards[10] = 1;
+				// if(current.behaviour==2)
+				// model.score--;
 			}
 
 			mainBehaviour.updateNetwork(current, next, true);
@@ -593,7 +613,8 @@ public class HierarchicalAI implements AI, Serializable {
 					if (subBehaviours[i].size[subBehaviours[i].size.length - 1] > current.action)
 						((Navigate) subBehaviours[i]).updateNetwork(current, next, false, inputKey, rewardWeights);
 				} else {
-					if (subBehaviours[i].size[subBehaviours[i].size.length - 1] > current.action)
+					if (subBehaviours[i].size[subBehaviours[i].size.length - 1] > current.action
+							&& current.input[49] < 1)
 						subBehaviours[i].updateNetwork(current, next, false);
 				}
 			}
@@ -640,18 +661,25 @@ public class HierarchicalAI implements AI, Serializable {
 	@Override
 	public void reset(boolean learn, int time) {
 		this.forceUpdateAll();
+		this.history.clear();
 		this.learn = learn;
 		if (learn) {
 			epsilon += epsilonIncrement;
 			epsilon = Math.min(epsilon, maxEpsilon);
+
 			temp = decay * temp;
 			temp = Math.max(temp, mintemp);
 			tempMain = decayMain * tempMain;
 			tempMain = Math.max(tempMain, mintemp);
 		}
-
-		System.out.println("Win, epsilon= " + this.epsilon + ", temp= " + this.temp + ", tempMain:" + tempMain
-				+ ", rate:" + this.mainBehaviour.n.learningRate);
+		if (model.win) {
+			System.out.println("Win, epsilon= " + this.epsilon + ", temp= " + this.temp + ", tempMain:" + tempMain
+					+ ", rate:" + this.mainBehaviour.n.learningRate);
+		} else {
+			System.out.println("Loss, epsilon= " + this.epsilon + ", temp= " + this.temp + ", tempMain:" + tempMain
+					+ ", rate:" + this.mainBehaviour.n.learningRate);
+		}
+		model.win = false;
 	}
 
 	@Override
@@ -681,8 +709,12 @@ public class HierarchicalAI implements AI, Serializable {
 	@Override
 	public void load(String fileName) {
 		mainBehaviour.load(fileName);
+		boolean flag = true;
 		for (Behaviour b : subBehaviours) {
-			b.load(fileName);
+			if (b.ID != "Keyfinder" || (b.ID == "Keyfinder" && flag)) {
+				b.load(fileName);
+				flag = flag && b.ID != "Keyfinder";
+			}
 		}
 
 		subBehaviours[1] = subBehaviours[0];
@@ -691,6 +723,7 @@ public class HierarchicalAI implements AI, Serializable {
 
 	public void setModel(Model m, int i) {
 		this.model = m;
+		m.setHistory(history);
 		this.path = new ShortestPathFinder(m.getLevelMap(), m);
 	}
 }

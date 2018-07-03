@@ -26,8 +26,8 @@ public class NeuralNetwork implements Serializable {
 	final double epsilon = 0.00000000001;
 
 	public double learningRate = 0.001;
-	final double minLearningRate=0.0000000000001;
-	double decay=.98;
+	final double minLearningRate=0.000001;
+	double decay=.995;
 	
 	final double momentum = 0.0;
 

@@ -5,7 +5,7 @@ import mapTiles.Spawner;
 public abstract class Enemy {
 	
 	final int stepSize=5;
-	public final double diameter =0.95;
+	public final double diameter =0.9;
 	int health;
 	private double speed;
 	double heading;

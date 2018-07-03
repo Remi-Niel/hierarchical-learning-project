@@ -14,15 +14,15 @@ import javax.swing.JOptionPane;
 public class MainTest {
 	final static double frameLim = 1000;
 	final static int gameLim = 500;
-	final static int epochs = 10;
+	final static int epochs = 1;
 
-	public static void main(String[] args) throws FileNotFoundException {
+	public static void main(String[] args) throws FileNotFoundException, InterruptedException {
 		// TODO Auto-generated method stub
 
-		int i = 0;
+		int i = 24;
 		int wins = 0;
-		int games = 0;
-		int inc = 10;
+		int games = 500;
+		int inc = 20;
 		int f = 0;
 
 		String fileName = JOptionPane.showInputDialog("Input neural network id to load network from.");
@@ -32,9 +32,10 @@ public class MainTest {
 		JLabel emptyLabel = new JLabel("");
 		frame.getContentPane().add(emptyLabel, BorderLayout.CENTER);
 
-		Model model = new Model("map");
+		Model model = new Model("Battle");
 		View view = new View(model);
 		Controller c = new Controller(view, frame, model, i + fileName + games);
+		c.reset(false, 0);
 		frame.add(view);
 		view.setPreferredSize(new Dimension(300, 300));
 		frame.pack();
@@ -49,12 +50,13 @@ public class MainTest {
 		System.setOut(stdout);
 
 		for (int t = 0; t < 10000; t++) {
-			while (games<=gameLim && c.load(t + fileName + games)) {
+			while (games <= gameLim && c.load(t + fileName + games)) {
 				System.out.println("games: " + games);
 				for (int e = 0; e < epochs; e++) {
 					while (!c.gameover() && f < frameLim) {
 						c.update(f, false, true);
-
+//						if (games > 100)
+//						Thread.sleep(100);
 						f++;
 					}
 					System.setOut(out);
@@ -67,10 +69,10 @@ public class MainTest {
 					} else {
 						System.out.print(3 + ",");
 					}
-					System.out.println(model.score+","+f);
+					System.out.println(model.score + "," + f);
 
 					System.setOut(stdout);
-					System.out.println("frames: "+f);
+					System.out.println("frames: " + f);
 					c.reset(false, 0);
 					f = 0;
 				}

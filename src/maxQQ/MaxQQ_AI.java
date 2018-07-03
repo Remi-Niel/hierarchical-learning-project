@@ -32,9 +32,13 @@ public class MaxQQ_AI implements AI, Serializable {
 	Random r;
 	transient ShortestPathFinder path;
 	transient Model model;
-	int inputs = 51;
+	int inputs = 75;
 	boolean shoot;
 	double heading;
+	double distanceKey = -1;
+	double distanceDoor = -1;
+	double distanceExit = -1;
+
 
 	Root root;
 	GoToExit goToExit;
@@ -59,8 +63,9 @@ public class MaxQQ_AI implements AI, Serializable {
 			primitives[i] = new primitiveAction(i);
 		}
 
-		nav = new Navigate(primitives, new int[] { 30, 300, 16 }, new int[] { 1, 2, 3, 4, 24, 25, 26, 27, 28, 29,
-				30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 50 }, m, 0);
+		nav = new Navigate(primitives, new int[] { 63, 300, 16 }, new int[] { 1, 2, 3, 4, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+				38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+				64, 65, 66, 67, 68, 69, 70, 71, 71, 72, 74 }, m, 0);
 
 		int[] inKey = new int[34];
 
@@ -69,17 +74,18 @@ public class MaxQQ_AI implements AI, Serializable {
 		}
 
 		combat = new Combat(
-				primitives, new int[] { 35, 300, 16 }, new int[] { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27,
-						28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50 },
+				primitives, new int[] { 60, 100, 16 }, new int[] { 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+						38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63,
+						64, 65, 66, 67, 68, 69, 70, 71, 71, 72, 73, 74 },
 				m, 0);
 
 		getKey = new GetKey(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 0 }, m, 0);
 		goToDoor = new GoToDoor(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 5 }, m, 0);
 		goToExit = new GoToExit(new AbstractAction[] { nav }, new int[] { 1, 1, 1 }, new int[] { 10 }, m, 0);
-		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3, 50, 2 },
+		openDoor = new OpenDoor(new AbstractAction[] { getKey, goToDoor }, new int[] { 3, 20, 2 },
 				new int[] { 0, 5, 15 }, m, 0);
-		root = new Root(new AbstractAction[] { openDoor, goToExit, combat }, new int[] { 5, 50, 3 },
-				new int[] { 0, 5, 10, 49, 50 }, m, 0);
+		root = new Root(new AbstractAction[] { openDoor, goToExit, combat }, new int[] { 5, 30, 3 },
+				new int[] { 0, 5, 10, 73, 74 }, m, 0);
 
 		actionStack = new Stack<AbstractAction>();
 		actionStack.push(root);
@@ -169,15 +175,15 @@ public class MaxQQ_AI implements AI, Serializable {
 	}
 
 	public double[] determineInput() {
-		int inputs = 51;
+		int inputs = 75;
 		double[] input = new double[inputs];
 
 		Door nearestDoor = null;
 		Key nearestKey = null;
 		Exit nearestExit = null;
-		double distanceKey = -1;
-		double distanceDoor = -1;
-		double distanceExit = -1;
+		distanceKey = -1;
+		distanceDoor = -1;
+		distanceExit = -1;
 		Map m = model.getLevelMap();
 		Tile t;
 		Player p = model.getPlayer();
@@ -192,7 +198,7 @@ public class MaxQQ_AI implements AI, Serializable {
 							distanceKey = r.distance;
 							nearestKey = (Key) t;
 						}
-					} else if (t instanceof Door && t.getSolid() && ((Door)t).entry) {
+					} else if (t instanceof Door && t.getSolid() && ((Door) t).entry) {
 						ResultTuple r = path.findPath(p.getX(), p.getY(), t.getX(), t.getY(), .95);
 						if ((r.distance < distanceDoor && r.distance != -1) || distanceDoor == -1) {
 							distanceDoor = r.distance;
@@ -285,7 +291,6 @@ public class MaxQQ_AI implements AI, Serializable {
 			}
 		}
 
-//		System.out.println(p.getY());
 		if (nearestExit == null) {
 			for (int i = 10; i < 15; i++) {
 				input[i] = -1;
@@ -341,24 +346,27 @@ public class MaxQQ_AI implements AI, Serializable {
 			input[16 + i] = Hits(i * Math.PI / 4);
 			sum += input[16 + i];
 		}
+		model.updateEnemyMap();
 		int count = 0;
-		for (int x = -2; x < 3; x++) {
-			for (int y = -2; y < 3; y++) {
+		for (int x = -3; x < 4; x++) {
+			for (int y = -3; y < 4; y++) {
 				int fX = (int) p.getX() - x;
 				int fY = (int) p.getY() - y;
 				if (fX > 0 && fY > 0 && fX < model.getLevelMap().getSize() && fY < model.getLevelMap().getSize()
-						&& model.getEnemyMap()[(int) p.getX() - x][(int) p.getY() - y]) {
+						&& model.getEnemyMap()[fX][fY]) {
 					input[24 + count] = 1;
 					sum++;
-				} else {
+				}else if(fX > 0 && fY > 0 && fX < model.getLevelMap().getSize() && fY < model.getLevelMap().getSize() && model.getLevelMap().getTile((int) p.getX() - x, (int) p.getY() - y).getSolid()){
+					input[24+count]=-1;
+				}else {
 					input[24 + count] = 0;
 				}
 				count++;
 
 			}
 		}
-		input[49] = 1 / (1 + sum);
-		input[50] = model.getPlayer().getHealth() / 5;
+		input[73] = 1 / (1 + sum);
+		input[74] = model.getPlayer().getHealth() / 3;
 		return input;
 
 	}

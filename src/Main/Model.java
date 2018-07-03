@@ -28,13 +28,13 @@ public class Model {
 	Queue<State> history;
 	String map;
 	AI ai;
-	final int timeLimit = 50000;
+	final int timeLimit = 20000;
 	public boolean enemyDied;
 	public boolean enemyDamaged;
 	public boolean playerDamaged;
 
-	public int score = 0;
-	public boolean win = false;;
+	public double score = 0;
+	public boolean win = false;
 
 	public Model(String fileName) {
 		map = fileName;
@@ -89,42 +89,42 @@ public class Model {
 				for (int x = 0; x <= 2; x++) {
 					for (int y = 0; y <= Math.min(x + 1, 2); y++) {
 						dX = s.getX() + x + 0.5;
-						dY = s.getY() + y + 0.5;
+						dY = s.getY() - y + 0.5;
 
 						if (legalLocation(dX, dY)) {
 							legal = true;
 							break;
 						}
 
-						dY = s.getY() - y + 0.5;
+						dY = s.getY() + y + 0.5;
 
 						if (legalLocation(dX, dY)) {
 							legal = true;
 							break;
 						}
 						dX = s.getX() - x + 0.5;
-						dY = s.getY() + y + 0.5;
+						dY = s.getY() - y + 0.5;
 
 						if (legalLocation(dX, dY)) {
 							legal = true;
 							break;
 						}
 
-						dY = s.getY() - y + 0.5;
+						dY = s.getY() + y + 0.5;
 
 						if (legalLocation(dX, dY)) {
 							legal = true;
 							break;
 						}
 						dX = s.getX() + 0.5;
-						dY = s.getY() + y + 0.5;
+						dY = s.getY() - y + 0.5;
 
 						if (legalLocation(dX, dY)) {
 							legal = true;
 							break;
 						}
 
-						dY = s.getY() - y + 0.5;
+						dY = s.getY() + y + 0.5;
 
 						if (legalLocation(dX, dY)) {
 							legal = true;
@@ -146,7 +146,12 @@ public class Model {
 		movePlayer(time);
 		if (time >= timeLimit - 1) {
 			this.gameOver = true;
+			// score -= 10;
 			this.win = false;
+
+			if (ai instanceof HierarchicalAI) {
+				((LinkedList<State>) history).getLast().death();
+			}
 		}
 	}
 
@@ -205,24 +210,29 @@ public class Model {
 			double dx = Math.cos(heading) * distance;
 			double dy = -Math.sin(heading) * distance;
 
-			e.move(e.getX() + dx, e.getY() + dy);
+			if (!this.collidesEnemy(e.getX() + dx, e.getY() + dy))
+				e.move(e.getX() + dx, e.getY() + dy);
 
 			if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < e.diameter) {
 				this.playerDamaged = true;
-				gameOver = gameOver || player.damage(e.getHealth());
-				if (gameOver) {
-					score -= 100;
+				if (!gameOver && player.damage(e.getHealth())) {
+					gameOver = true;
+					score -= 10;
 				}
+
 				if (e instanceof Ghost) {
 					((Ghost) e).getParent().decrementCount();
 				}
 				enemyList.remove(e);
 				enemyDied = true;
 				if (ai instanceof HierarchicalAI) {
+
+					score += 10;
 					((LinkedList<State>) history).getLast().damagedEnemy();
 					((LinkedList<State>) history).getLast().damaged();
-					if (gameOver)
+					if (gameOver) {
 						((LinkedList<State>) history).getLast().death();
+					}
 				}
 
 			}
@@ -258,31 +268,19 @@ public class Model {
 						((MaxQQ_AI) ai).reachedDoor(player.getKeys() > 0);
 					}
 					if (player.useKey()) {
-						score += 20;
+						score += 10;
 						if (ai instanceof HierarchicalAI)
 							current.openedDoor();
 						if (ai instanceof MaxQQ_AI) {
 							((MaxQQ_AI) ai).openedDoor();
 						}
-
 						levelMap.open(t[i].getX(), t[i].getY());
 						levelMap.floodFillReachable(t[i].getX(), t[i].getY());
 					} else {
-						if (ai instanceof MaxQQ_AI) {
-							((MaxQQ_AI) ai).walkedIntoWall(g);
-						}
-						if (ai instanceof HierarchicalAI) {
-							current.hitWall();
-						}
 						return true;
 					}
 				} else {
-					if (ai instanceof MaxQQ_AI) {
-						((MaxQQ_AI) ai).walkedIntoWall(g);
-					}
-					if (ai instanceof HierarchicalAI) {
-						current.hitWall();
-					}
+
 					return true;
 				}
 			}
@@ -302,7 +300,7 @@ public class Model {
 		for (int i = 0; i < 9; i++) {
 			if (t[i] instanceof Key && !key) {
 				key = !key;
-				score += 10;
+				score += 5;
 				if (ai instanceof HierarchicalAI)
 					current.gotKey();
 				if (ai instanceof MaxQQ_AI) {
@@ -314,7 +312,6 @@ public class Model {
 			if (t[i] instanceof Health) {
 				if (ai instanceof HierarchicalAI)
 					current.health();
-				this.playerDamaged = true;
 				player.damage(-((Health) t[i]).health);
 				levelMap.destroyTile(t[i].getX(), t[i].getY());
 			}
@@ -330,6 +327,28 @@ public class Model {
 				}
 			}
 
+		}
+		return false;
+	}
+
+	public boolean collidesEnemy(double x, double y) {
+
+		Tile t[] = new Tile[9];
+
+		t[0] = levelMap.getTile((int) (x + 0.4), (int) (y - 0.4));
+		t[1] = levelMap.getTile((int) (x + 0.4), (int) (y + 0.4));
+		t[2] = levelMap.getTile((int) (x - 0.4), (int) (y - 0.4));
+		t[3] = levelMap.getTile((int) (x - 0.4), (int) (y + 0.4));
+		t[4] = levelMap.getTile((int) (x + 0.4), (int) (y));
+		t[5] = levelMap.getTile((int) (x - 0.4), (int) (y));
+		t[6] = levelMap.getTile((int) (x), (int) (y + 0.4));
+		t[7] = levelMap.getTile((int) (x), (int) (y - 0.4));
+		t[8] = levelMap.getTile((int) (x), (int) (y));
+
+		for (int i = 0; i < 9; i++) {
+			if (t[i].getSolid()) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -365,7 +384,9 @@ public class Model {
 	}
 
 	public void movePlayer(int t) {
-
+		State current = null;
+		if (ai instanceof HierarchicalAI && history.size() > 0)
+			current = ((LinkedList<State>) history).getLast();
 		// teteSystem.out.println(ai.toString());
 		if (ai.getHeading() < 0 || (ai.shoot() && player.loaded()))
 			return;
@@ -381,6 +402,15 @@ public class Model {
 		if (!collides(x, y, t)) {
 			player.move(x, y);
 		} else {
+
+			score -= 0.1;
+			if (ai instanceof MaxQQ_AI) {
+				((MaxQQ_AI) ai).walkedIntoWall(t);
+			}
+			if (ai instanceof HierarchicalAI) {
+				current.hitWall();
+			}
+
 			x -= dx;
 			if (!collides(x, y, t)) {
 				player.move(x, y);
@@ -450,6 +480,8 @@ public class Model {
 							minDist = distance(player.getX(), t.getX(), player.getY(), t.getY());
 							if (t instanceof Spawner) {
 								closest = (Spawner) t;
+							} else {
+								closest = null;
 							}
 						}
 						destroyed = true;
@@ -471,6 +503,10 @@ public class Model {
 			// System.out.println("Test");
 			bulletDist = minDist;
 			for (Enemy e : enemyList) {
+				if (!levelMap.getTile((int) (e.getX()), (int) (e.getY())).reachable()) {
+					continue;
+				}
+
 				double heading = -Math.atan2(e.getY() - player.getY(), e.getX() - player.getX());
 				if (heading < 0)
 					heading += 2 * Math.PI;
@@ -480,25 +516,31 @@ public class Model {
 				// System.out.println("Enemy:
 				// "+Math.abs(bulletDistance(e.getX(), e.getY()))+",
 				// "+(heading)+", "+ai.getHeading()+", "+relativeHeading);
-
+				double dist = Math.abs(player.getX() - e.getX()) + Math.abs(player.getY() - e.getY());
+				double pathdist = p.findPath(player.getX(), player.getY(), e.getX(), e.getY(), .95).distance;
 				if (relativeHeading < Math.PI / 2 && Math.abs(bulletDistance(e.getX(), e.getY())) < 1.5) {
 					// System.out.println("Hit!");
-					enemyDamaged = true;
-					if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < minDist && e.hit()) {
-						enemyList.remove(e);
-						enemyDied = true;
+					if (distance(e.getX(), player.getX(), e.getY(), player.getY()) < bulletDist && pathdist <= dist) {
+						if (ai instanceof HierarchicalAI) {
+							((LinkedList<State>) history).getLast().damagedEnemy();
+						}
+						if (e.hit()) {
+							enemyList.remove(e);
+							enemyDied = true;
+						}
+						enemyDamaged = true;
 						hit = true;
+						destroyed = true;
 					}
-					destroyed = true;
-					continue;
 				}
 			}
-			if (enemyDied)
-				score += 2;
-
-			if (destroyed)
+			if (destroyed) {
 				updateHistoryBullet(bulletTime, hit);
+			}
 			b = null;
+		}
+		if (enemyDamaged) {
+			score += 10;
 		}
 		if (ai.shoot() && ai.getHeading() != -1 && player.shoot()) {
 			// System.out.println("Shoot!!!");
@@ -534,6 +576,7 @@ public class Model {
 		score = 0;
 		gameOver = false;
 		enemyList.clear();
+		win = false;
 		b = null;
 		try {
 			levelMap = new Map(map, enemyList);

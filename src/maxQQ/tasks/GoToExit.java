@@ -79,7 +79,7 @@ public class GoToExit extends SubTask {
 			return true;
 		} else if (input[10] == -1) { // No reachable exit
 //			System.out.println("Terminating " + this.getClass() + " no exit reachable " + input[10]);
-			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -5;
+			currentReward += Math.pow(discountfactor, time - this.lastActionTime) * -1;
 			return true;
 		}
 		return false;

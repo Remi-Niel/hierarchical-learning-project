@@ -21,10 +21,14 @@ public class Combat extends SubTask {
 
 	@Override
 	public boolean finished(double[] input, Model model, int time) {
-		if (model.enemyDied) {
-			this.currentReward += Math.pow(discountfactor, time - this.lastActionTime) * 1;
+		if (model.enemyDamaged) {
+			this.currentReward += Math.pow(discountfactor, time - this.lastActionTime) * 2;
 			return true;
 		}
+		if (model.playerDamaged) {
+			this.currentReward -= 10;
+		}
+
 		boolean flag = true;
 		for (int i = 16; i < 49; i++) {
 			if (input[i] > 0) {
@@ -32,9 +36,13 @@ public class Combat extends SubTask {
 				break;
 			}
 		}
-		if (flag) {
-			this.currentReward -= Math.pow(discountfactor, time - this.lastActionTime) * 10;
+		if (flag && !model.enemyDied) {
+			this.currentReward -= Math.pow(discountfactor, time - this.lastActionTime) * 1;
 			return true;
+		}
+
+		if (model.getPlayer().getHealth() <= 0) {
+			this.currentPseudoReward -= Math.pow(discountfactor, time - this.lastActionTime) * 10;
 		}
 
 		return false;

@@ -28,9 +28,9 @@ public class Controller extends Observable {
 		this.m = m;
 		this.setChanged();
 		this.notifyObservers();
-//		 ai=new ManualAI(m);
-		ai = new HierarchicalAI(m);
-//		 ai = new MaxQQ_AI(m);
+		// ai=new ManualAI(m);
+//		ai = new HierarchicalAI(m);
+		 ai = new MaxQQ_AI(m);
 		dir = new File("AIs");
 		dir.mkdirs();
 		if (new File(dir, file).exists()) {
@@ -48,25 +48,25 @@ public class Controller extends Observable {
 			f.setFocusable(true);
 			v.addKeyListener((ManualAI) ai);
 			f.addKeyListener((ManualAI) ai);
-			((ManualAI)ai).setModel(m,0);
+			((ManualAI) ai).setModel(m, 0);
 		}
 		learn = true;
 	}
 
 	public void update(int time, boolean b, boolean draw) {
-//		 System.out.println("determine action");
+		// System.out.println("determine action");
 		ai.determineAction(time, b);
 		m.playerDamaged = false;
 		m.enemyDamaged = false;
 		m.enemyDied = false;
-//		 System.out.println("update player");
+		// System.out.println("update player");
 		m.updatePlayer(time);
 
-//		 System.out.println("update spawners");
+		// System.out.println("update spawners");
 		m.tickSpawners();
-//		 System.out.println("update bullets");
+		// System.out.println("update bullets");
 		m.updateBullets(time);
-//		 System.out.println("Move enemies");
+		// System.out.println("Move enemies");
 		m.moveEnemies();
 
 		if (ai instanceof MaxQQ_AI) {
@@ -74,7 +74,7 @@ public class Controller extends Observable {
 		}
 
 		if (draw) {
-//			 System.out.println("Notify observers");
+			// System.out.println("Notify observers");
 			setChanged();
 			notifyObservers();
 		}
