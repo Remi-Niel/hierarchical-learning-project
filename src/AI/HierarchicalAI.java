@@ -163,20 +163,6 @@ public class HierarchicalAI implements AI, Serializable {
 				}
 			}
 		}
-
-		// double max = output[0];
-		// int behaviour = 0;
-		// for (int i = 1; i < output.length; i++) {
-		// if (output[i] > max) {
-		// max = output[i];
-		// behaviour = i;
-		// }
-		// }
-		// if (learn && r.nextDouble() > .5) {
-		// behaviour = r.nextInt(subBehaviours.length);
-		// }
-		// // if (!learn)
-		// System.out.println("behaviour: " + subBehaviours[behaviour].ID);
 		boolean reachable = true;
 		if (subBehaviours[behaviour] instanceof Navigate) {
 			int[] inputKey = null;
@@ -228,47 +214,15 @@ public class HierarchicalAI implements AI, Serializable {
 					break;
 				}
 			}
-		} else {
-			// System.out.println(behaviour+": "+Arrays.toString(out));
-		}
-		// int action = 0;
-		// max = output[0];
-		// for (int i = 1; i < output.length; i++) {
-		// if (output[i] > max) {
-		// max = output[i];
-		// action = i;
-		// }
-		// }
-		// // System.out.println("Action: " + action + " " + max);
-		// if (learn && r.nextDouble() > .7) {
-		// action = r.nextInt(8);
-		// }
-		//
-		// if (!learn)
-		// System.out.println("Action: " + action + " " + max);
+		} 
 		State s = new State(time, input, action, behaviour);
 		s.distanceDoor = distanceDoor;
 		s.distanceExit = distanceExit;
 		s.distanceKey = distanceKey;
 		if (!reachable) {
 			s.targetNotReachable();
-			// System.out.println("Target not reachable");
 		}
 		history.add(s);
-
-		// System.out.print(behaviour + ": ");
-		// if (behaviour == 0) {
-		// System.out.println(input[0] + " getting key");
-		// } else if (behaviour == 1) {
-		// System.out.println("goto door");
-		// } else if (behaviour == 2) {
-		// System.out.println("goto exit");
-		// } else {
-		// System.out.println("combat");
-		// }
-		// System.out.println(Arrays.toString(input));
-		// System.out.println(Arrays.toString(out));
-		// System.out.println((action));
 
 		heading = (action % 8) * Math.PI / 4;
 		shoot = action >= 8;
